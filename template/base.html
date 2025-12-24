@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}  <!-- ✅ Load static files -->
+
+    <!-- 🔁 Preconnect to OpenStreetMap early -->
+    <link rel="dns-prefetch" href="//nominatim.openstreetmap.org">
+    <link rel="preconnect" href="https://nominatim.openstreetmap.org" crossorigin>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCap</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <!-- Select 2 for Searchable Dropdowns -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        #mobile-frame::after {
+            background-image: url("{% static 'images/SRHU-logo@4x-200x186.png' %}");
+        }
+    </style>
+
+    {% block extrahead %}{% endblock %}
+</head>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #646c73;">
+
+    <!-- Mobile Frame Container -->
+    <div id="mobile-frame" style="width: 375px; max-width: 100%; height: 90vh; border: 5px solid black; border-radius: 20px; overflow: hidden; background: white; display: flex; flex-direction: column; position: relative;">
+
+        <!-- Fixed Header -->
+        <header class="fixed-top w-100" style="position: relative;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light d-flex justify-content-between">
+                
+                <!-- Logo & Name -->
+                <a class="navbar-brand fs-6 ms-3" href="{% url 'members:service_choice' %}">
+                    <img src="{% static 'images/favicon.ico' %}" alt="MediCapture Logo" width="28" height="24" class="d-inline-block align-top me-2">
+                    MedCap
+                </a>
+
+                <!-- Right: Logged-in User's Name & Logout Button -->
+                {% if request.user.is_authenticated %}
+                <div class="d-flex align-items-center me-2">
+                    <a href="{% url 'members:profile' %}" class="me-2 fw-bold">
+                        {% if request.user.first_name %}
+                            {{ request.user.first_name }}
+                        {% else %}
+                            Profile
+                        {% endif %}
+                    </a>
+                    
+                    <form method="POST" action="{% url 'members:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </nav>
+        </header>
+
+
+        <!-- Dynamic Content Section -->
+        <div class="content-container mt-2 pt-2 flex-grow-1" style="overflow-y: auto; padding: 10px;">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+        <!-- Fixed Footer -->
+        <footer class="fixed-bottom w-100 bg-light" style="position: relative;">
+            <div class="container text-center py-2">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <!-- Footer for Superusers (Exclusive Menus) -->
+                        <div class="d-flex justify-content-around">                         
+                            <button class="btn btn-info custom-font" 
+                                onclick="window.location.href='{% url 'members:configs' %}'">
+                                Configs
+                            </button>   
+                            <button id="report-issue-btn" class="btn btn-success custom-font"
+                                onclick="window.location.href='{% url 'capture:manage_issues' %}'">
+                                Issues
+                            </button>
+                        </div>
+                    {% else %}
+                        <!-- Footer for Non-Superusers (Navigation Buttons) -->
+                        <div class="d-flex justify-content-around">                       
+                            <button id="capture-btn-base" class="btn btn-sm btn-success custom-font" 
+                                onclick="window.location.href='{% url 'members:service_choice' %}'">
+                                Switch Service
+                            </button>    
+                            
+                            <button id="report-issue-btn" class="btn btn-warning custom-font"
+                                onclick="window.location.href='{% url 'capture:report_issue' %}'">
+                                Report Issue
+                            </button>
+
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Footer for Non-Logged-In Users (Copyright Text) -->
+                    <p class="mb-0 small">&copy; Designed-Developed by DoIT, SRHU</p>
+                {% endif %}
+            </div>
+        </footer>
+
+        <div id="loading-overlay">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading…</span>
+            </div>
+        </div>
+
+    </div> <!-- End Mobile Frame Container -->
+
+    <!-- Bootstrap 5 JS includes Popper.js for html modals -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (required by DataTables and Searchable Dropdown using Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!--For Searchable dropdown and MUST be after jQuery and before block extraheads  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <!-- DataTables + Bootstrap 5 integration JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/base.js' %}"></script>
+
+
+    <!-- Allow extra scripts to be injected from child templates -->
+    {% block extrascripts %}
+    {% endblock %}
+
+    
+    
+</body>
+</html>

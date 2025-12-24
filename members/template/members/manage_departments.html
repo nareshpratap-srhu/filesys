@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<style>
+  .manage-list { max-width: 800px; margin: auto; }
+  .abbr { font-size: .85rem; font-style: italic; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 manage-list">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-center mb-3">🏢 Manage Departments</h5>
+    <a href="{% url 'members:export_department_list_excel' %}" class="btn btn-success btn-sm">
+        Excel
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h6 class="mb-0">Add New Department</h6>
+    </div>
+    <div class="card-body">
+      <form method="post" id="add-department-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-success" data-action="add-department">Add Department</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Departments -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h6 class="mb-0">Active Departments</h6>
+    </div>
+    <ul class="list-group list-group-flush" id="active-department-list">
+      {% for dept in active_departments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ forloop.counter }}.</strong> {{ dept.name }}<br>
+            <span class="abbr">{{ dept.abbreviation }}</span>
+          </div>
+          <form method="post" action="{% url 'members:deactivate_department' dept.id %}" id="deactivate-department-form-{{ dept.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" data-action="deactivate">Deactivate</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No active departments.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Inactive Departments -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h6 class="mb-0">Inactive Departments</h6>
+    </div>
+    <ul class="list-group list-group-flush" id="inactive-department-list">
+      {% for dept in inactive_departments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ forloop.counter }}.</strong> {{ dept.name }}<br>
+            <span class="abbr">{{ dept.abbreviation }}</span>
+          </div>
+          <form method="post" action="{% url 'members:restore_department' dept.id %}" id="restore-department-form-{{ dept.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-success">Restore</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No inactive departments.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Spinner Trigger (guarded)
+    function showSpinner() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.style.display = 'flex';
+      else console.warn('#loading-overlay not found, skipping spinner');
+    }
+
+    // 2. Bind spinner to all forms
+    document.querySelectorAll('form').forEach(f =>
+      f.addEventListener('submit', showSpinner)
+    );
+
+    // 3. Auto-dismiss Bootstrap alerts
+    setTimeout(() => {
+      document.querySelectorAll('.alert').forEach(a =>
+        bootstrap.Alert.getOrCreateInstance(a).close()
+      );
+    }, 2000);
+  });
+</script>
+{% endblock %}

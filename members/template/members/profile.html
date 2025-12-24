@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block extrahead %}
+<style>
+    .small-font { font-size: 0.9rem; }
+    .wrap-text { word-wrap: break-word; }
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center">Your Profile</h3>
+
+    <!-- Display success or error messages -->
+    {% if messages %}
+        <div class="mt-2">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show p-2" role="alert">
+                    <span class="me-3">{{ message }}</span>
+                    <button
+                    type="button"
+                    class="btn-close position-absolute top-50 end-0 translate-middle-y me-2"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                    ></button>
+                </div>
+              
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Full Name -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Full Name</label>
+        </div>
+        <div class="col-8 border-start">
+            <p class="form-control-plaintext wrap-text">{{ request.user.full_name }}</p>
+        </div>
+    </div>
+
+    <!-- Email -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Email</label>
+        </div>
+        <div class="col-8 border-start">
+            <p class="form-control-plaintext wrap-text">{{ request.user.email }}</p>
+        </div>
+    </div>
+
+    <!-- Employee ID -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Emp. ID</label>
+        </div>
+        <div class="col-8 border-start">
+            <p class="form-control-plaintext wrap-text">{{ request.user.employee_id }}</p>
+        </div>
+    </div>
+
+    <!-- Department -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Department</label>
+        </div>
+        <div class="col-8 border-start">
+            {% if request.user.department %}
+              <p class="form-control-plaintext wrap-text">
+                {{ request.user.department.name }}
+              </p>
+            {% else %}
+              <p class="form-control-plaintext wrap-text text-muted">—</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Designation -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Designation</label>
+        </div>
+        <div class="col-8 border-start">
+            {% if request.user.designation %}
+              <p class="form-control-plaintext wrap-text">
+                {{ request.user.designation.title }}
+              </p>
+            {% else %}
+              <p class="form-control-plaintext wrap-text text-muted">—</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Phone -->
+    <div class="row mb-2 border p-1 small-font">
+        <div class="col-4 border-end">
+            <label class="form-label fw-bold pt-2">Phone</label>
+        </div>
+        <div class="col-8 border-start">
+            <p class="form-control-plaintext wrap-text">{{ request.user.phone }}</p>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-4 text-end">
+        <a href="{% url 'members:profile_update' %}" class="btn btn-primary">Update Profile</a>
+        <a href="{% url 'members:password_update' %}" class="btn btn-secondary ms-2">Change Password</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-dismiss alerts after 3 seconds
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();  // Close the alert after 3 seconds
+            }, 1500); // 3000 ms = 3 seconds
+        });
+    });
+</script>
+{% endblock %}

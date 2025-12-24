@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<style>
+  .manage-list { max-width: 800px; margin: auto; }
+  .abbr { font-size: .85rem; font-style: italic; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 manage-list">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-center mb-3">🏷️ Manage Designations</h5>
+      <a href="{% url 'members:export_designation_list_excel' %}" class="btn btn-success btn-sm">
+          Excel
+      </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h6 class="mb-0">Add New Designation</h6>
+    </div>
+    <div class="card-body">
+      <form method="post" id="add-designation-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-success" data-action="add-designation">Add Designation</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Designations -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h6 class="mb-0">Active Designations</h6>
+    </div>
+
+    <ul class="list-group list-group-flush" id="active-designation-list">
+      {% for d in active_designations %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ forloop.counter }}.</strong>{{ d.title }}<br>
+            <span class="abbr">{{ d.abbreviation }}</span>
+          </div>
+          <form method="post" action="{% url 'members:deactivate_designation' d.id %}" id="deactivate-designation-form-{{ d.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No active designations.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Inactive Designations -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h6 class="mb-0">Inactive Designations</h6>
+    </div>
+    <ul class="list-group list-group-flush" id="inactive-designation-list">
+      {% for d in inactive_designations %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            {{ d.title }}<br>
+            <span class="abbr">{{ d.abbreviation }}</span>
+          </div>
+          <form method="post" action="{% url 'members:restore_designation' d.id %}" id="restore-designation-form-{{ d.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-success">Restore</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No inactive designations.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+  // Spinner Trigger Function
+  function showSpinner() {
+      console.log("Showing spinner...");  // Debugging log to see if function is called
+      document.getElementById('loading-overlay').style.display = 'flex';
+  }
+
+  // Add event listener to trigger spinner on form submit (Add, Deactivate, Restore)
+  document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function (event) {
+          console.log("Designation Form submitted, showing spinner...");
+          showSpinner();  // Show spinner when the form is submitted
+      });
+  });
+
+  // Auto-dismiss alerts after 2 seconds
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+      bootstrap.Alert.getOrCreateInstance(a).close();
+    });
+  }, 2000);
+</script>
+{% endblock %}

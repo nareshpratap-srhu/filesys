@@ -1,0 +1,11 @@
+# Django media & uploads
+media/
+
+
+# Django & Python
+*.sqlite3
+__pycache__/
+*.pyc
+
+# Environment files
+.env

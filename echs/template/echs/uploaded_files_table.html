@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block extrahead %}
+<style>
+    #uploaded-files-table thead th,           /* Header cells */
+    #uploaded-files-table tfoot th {           /* Footer cells */     
+        font-size: 0.70rem;                    /* Adjust the font size */
+    }
+
+
+    #uploaded-files-table tbody tr,
+    #uploaded-files-table tbody td {           /* Footer cells */     
+        font-size: 0.75rem;                    /* Adjust the font size */
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-1          ">
+    <h5 class="text-left mb-1 fw-bold">Uploaded Files</h5>
+    <a href="{% url 'capture:export_uploaded_files_excel' %}" class="btn btn-success btn-sm">
+        Excel
+    </a>
+</div>
+
+
+<div class="table-responsive">
+    <table id="uploaded-files-table" class="table table-striped table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>IP-Tag</th>
+                <th>Name<br>Username<br>Designation<br>Department</th>
+                <th>Date<br>Time</th>
+            </tr>
+        </thead>
+        <tbody class="table-light">
+            {% for file in files %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {{ file.uhid|stringformat:"s"|slice:":2" }}/{{ file.uhid|stringformat:"s"|slice:"2:" }}<br>
+                    {% if file.custom_tag %}
+                        {{ file.custom_tag.name }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ file.user.full_name }}<br>
+                    <small class="text-muted">{{ file.user.email }}</small><br>
+
+                    {% if file.user.designation %}
+                        <small>{{ file.user.designation.title }}</small>
+                        {% if file.user.designation_other %}
+                            <small>({{ file.user.designation_other }})</small><br>
+                        {% endif %}
+                    {% else %}
+                        <small class="text-muted">N/A</small><br>
+                    {% endif %}
+
+                    {% if file.user.department %}
+                        <small>{{ file.user.department.name }}</small>
+                        {% if file.user.department_other %}
+                            <small>({{ file.user.department_other }})</small><br>
+                        {% endif %}
+                    {% else %}
+                        <small class="text-muted">N/A</small>
+                    {% endif %}
+                    <small>{{ file.user.phone }}</small>
+                </td>
+                <td>
+                    {{ file.timestamp|date:"d-M-Y" }}<br>
+                    <small class="text-muted">{{ file.timestamp|time:"h:i:s A" }}
+</small><br>
+                    <a href="{{ file.file_path.url }}" target="_blank">View File</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+    $(document).ready(function () {
+        $('#uploaded-files-table').DataTable({
+            "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+            "language": {
+            "lengthMenu": "Show _MENU_ files",  // Change "entries" to "users"
+            "info": "Showing _START_ to _END_ of _TOTAL_ files",  // Change "entries" to "users"
+            "infoEmpty": "Showing 0 to 0 of 0 users",  // Change "entries" to "users"
+            "infoFiltered": "(filtered from _MAX_ total users)"  // Change "entries" to "users"
+        },
+            "initComplete": function () {
+                $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+                $('.dataTables_length').css('margin-bottom', '0.5rem');
+                $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+            }
+
+        });
+    });
+</script>
+{% endblock %}

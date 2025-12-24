@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+{% block extrahead %}
+<!-- Custom CSS -->
+<link rel="stylesheet" href="{% static 'echs/css/view_images.css' %}">
+<style>
+    .tiny-alert .swal2-icon {
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 20px !important;
+    margin: 5px auto !important;
+    }
+</style>
+{% endblock %}
+
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mt-4">
+            Selected IP: {{ uhid|slice:":2" }}/{{ uhid|slice:"2:" }}
+        </h4>
+
+        <!-- Download all Image files button -->
+        <a href="{% url 'echs:download_all_images' uhid=uhid %}" class="text-decoration-none p-0 m-0">
+            <i class="fas fa-download" style="font-size: 1rem;"></i>
+        </a>
+    </div>
+
+    <div class="row">
+        <h6 class="text-customcolor">Patient Name : {{patient_name}}
+        </h6>
+    </div>
+
+    {% if request.GET.deleted %}
+        <div id="image-delete-message" class="alert alert-warning mt-3">
+            Image deleted successfylly!
+        </div>
+    {% endif %}
+
+    <!-- Thumbnail Grid -->
+    <div id="thumbnailGrid" class="row">
+        {% for image in images %}
+        <div class="col-12 mb-2">
+            <div class="row border rounded p-1">
+
+                <!-- Image Column (7/12) -->
+                <div class="col-7 border-end p-1">
+                    <img src="{{ image.image_path.url }}" class="img-fluid rounded shadow-sm"
+                        alt="Captured Image"
+                        onclick="showFullImage(
+                            '{{ image.image_path.url }}', 
+                            '{{ image.filename }}',
+                            '{{ image.timestamp|date:"d-M-y h:i A" }}',
+                            '{{ image.image_size_kb|floatformat:0 }}',
+                            '{{ image.image_size_mb }}',
+                            '{{ image.location|default:"" }}',
+                            '{{ image.custom_tag|default:"" }}',
+                            '{{ image.id }}',
+                            '{{ image.user_full_name|default:"Unknown User" }}'
+                        )">
+                    {% if image.custom_tag %}
+                    <p class="mt-1 mb-0 text-primary small"><strong>Tag: {{ image.custom_tag }}</strong></p>
+                    {% endif %}
+                    <div class="small text-muted">
+                        <p class="mb-1 ms-1">{{ image.timestamp|date:"d-M-y h:i A" }}</p>
+                        <p class="mb-1 ms-1"><strong>Source:</strong>
+                            {% if image.source_type == 'captured' %}
+                                Captured
+                            {% elif image.source_type == 'uploaded' %}
+                                Uploaded
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Image Details Column (5/12) -->
+                <div class="col-5 p-1">
+                    <div class="small text-muted">
+                        <p class="mb-1 ms-1"><strong>Uploaded by:</strong><br>
+                            {{ image.user_full_name|default:"Unknown User" }}<br>
+                        </p>
+
+                        <p class="mb-1 ms-1"><strong>Designation:</strong><br>
+                            {% if image.user.designation or image.user.designation_other %}
+                                {% if image.user.designation %}{{ image.user.designation.title }}{% endif %}
+                                {% if image.user.designation_other %}
+                                    {% if image.user.designation %} ({% endif %}{{ image.user.designation_other }}{% if image.user.designation %}){% endif %}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+
+                        <p class="mb-1 ms-1"><strong>Department:</strong><br>
+                            {% if image.user.department or image.user.department_other %}
+                                {% if image.user.department %}
+                                    {{ image.user.department.name }}
+                                {% endif %}
+                                {% if image.user.department_other %}
+                                    {% if image.user.department %} ({% endif %}{{ image.user.department_other }}{% if image.user.department %}){% endif %}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+
+
+                        {% if image.image_size_kb and image.image_size_mb %}
+                        <p class="mb-1 ms-1"><strong>Size:</strong><br>
+                            {{ image.image_size_kb|floatformat:0 }} KB
+                            ({{ image.image_size_mb }} MB)
+                        </p>
+                        {% endif %}
+
+                        <!-- Download Button -->
+                        <div class="row  text-end">
+                            <div class="col-auto mt-1 ml-1">
+                                {% if image.user_id == request.user.id %}
+                                    {% if image.source_type == 'captured' %}
+                                        <i class="fas fa-trash-alt"
+                                           style="font-size: 1.3rem; color: rgb(212, 23, 23); cursor: pointer;"
+                                           onclick="confirmDelete('{% url 'echs:delete_image' 'captured' image.id %}')">
+                                        </i>
+                                    
+                                    {% elif image.source_type == 'uploaded' %}
+                                        <i class="fas fa-trash-alt"
+                                           style="font-size: 1.3rem; color: rgb(212, 23, 23); cursor: pointer;"
+                                           onclick="confirmDelete('{% url 'echs:delete_image' 'uploaded' image.id %}')">
+                                        </i>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <a href="{{ image.image_path.url }}" download class="btn btn-success btn-sm">Download</a>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>No images found.</p>
+        {% endfor %}
+
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="{% url 'echs:echs_uhid_options'%}?uhid={{ uhid }}" class="btn btn-secondary"> Back</a>
+        </div>
+    </div>
+
+    <!-- Full Image Display -->
+    <div id="fullImageContainer" class="text-center d-none p-3">
+        <img id="fullImage" src="" class="img-fluid rounded shadow mb-3">
+
+        <!-- Image Information Card -->
+        <div class="border rounded p-3 bg-light text-start shadow-sm">
+            <p class="mb-1"><strong>Filename:</strong><br><span id="imageFilename"></span></p>
+            <p class="mb-1"><strong>Captured:</strong><br><span id="imageTimestamp"></span></p>
+            <p class="mb-1"><strong>Size:</strong><br><span id="imageSize"></span></p>
+            <p class="mb-1 d-none" id="imageLocationWrapper"><strong>Location:</strong> <span id="imageLocation"></span></p>
+            <p class="mb-1 d-none" id="imageTagWrapper"><strong>Tag:</strong> <span id="imageTag"></span></p>
+            <p class="mb-1"><strong>Captured by:</strong><br><span id="imageUploader"></span></p>
+        </div>
+        <button class="btn btn-secondary mt-3 mb-2" onclick="showThumbnails()">Back</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'capture/js/view_images.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const msg = document.getElementById('image-delete-message');
+        if (msg) {
+            setTimeout(() => msg.style.display = 'none', 5000);
+        }
+    });
+    function confirmDelete(deleteUrl) {
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You want ot delete this image.",
+        icon: "warning",
+        width: "350px",         
+        padding: "0.5rem",       
+        showCancelButton: true,
+        customClass: {
+            popup: "tiny-alert"
+        },
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+            window.location.href = deleteUrl;
+        }
+
+    });
+
+}
+</script>
+{% endblock %}

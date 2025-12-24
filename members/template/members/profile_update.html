@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center">Update Your Profile</h3>
+
+    <!-- Profile Update Form -->
+    <form method="POST" action="{% url 'members:profile_update' %}">
+        {% csrf_token %}
+
+        {% if messages %}
+            <div class="mt-2">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show p-2 position-relative" role="alert">
+                        <span class="me-3">{{ message }}</span>
+                        <button
+                            type="button"
+                            class="btn-close position-absolute top-50 end-0 translate-middle-y me-2"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+            {{ profile_form.full_name }}
+            {% if profile_form.full_name.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.full_name.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            {{ profile_form.email }}
+            {% if profile_form.email.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.email.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="employee_id" class="form-label">Employee ID</label>
+            {{ profile_form.employee_id }}
+            {% if profile_form.employee_id.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.employee_id.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Department Dropdown -->
+        <div class="mb-3">
+            <label for="department" class="form-label">Department</label>
+            {{ profile_form.department }}
+            {% if profile_form.department.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.department.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Department Other -->
+        <div class="mb-3" id="department-other-wrapper" style="display: none;">
+            <label for="department_other" class="form-label">Specify Department</label>
+            {{ profile_form.department_other }}
+            {% if profile_form.department_other.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.department_other.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Ward Dropdown -->
+        <div class="mb-3">
+            <label for="ward" class="form-label">Ward</label>
+            {{ profile_form.ward }}
+            {% if profile_form.ward.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.ward.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Ward Other -->
+        <div class="mb-3" id="ward-other-wrapper" style="display: none;">
+            <label for="ward_other" class="form-label">Specify Ward</label>
+            {{ profile_form.ward_other }}
+            {% if profile_form.ward_other.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.ward_other.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Designation Dropdown -->
+        <div class="mb-3">
+            <label for="designation" class="form-label">Designation</label>
+            {{ profile_form.designation }}
+            {% if profile_form.designation.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.designation.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Designation Other -->
+        <div class="mb-3" id="designation-other-wrapper" style="display: none;">
+            <label for="designation_other" class="form-label">Specify Designation</label>
+            {{ profile_form.designation_other }}
+            {% if profile_form.designation_other.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.designation_other.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            {{ profile_form.phone }}
+            {% if profile_form.phone.errors %}
+                <div class="text-danger">
+                    {% for error in profile_form.phone.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+            <a href="{% url 'members:profile' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.select2').select2({
+            width: '100%',
+            placeholder: "Select an option"
+        });
+
+        // Function to show/hide "Specify" input field and apply/remove "required" attribute
+        function toggleOtherField(selectId, wrapperId) {
+            const selectedText = $(`#${selectId} option:selected`).text().toLowerCase();
+            const $wrapper = $(`#${wrapperId}`);
+            const $input = $wrapper.find('input');
+            
+            if (selectedText === "other" || selectedText === "others") {
+                $wrapper.show();
+                $input.prop('required', true);
+            } else {
+                $wrapper.hide();
+                $input.val("");
+                $input.prop('required', false);
+            }
+        }
+
+        // Initial toggle on page load
+        toggleOtherField("id_department", "department-other-wrapper");
+        toggleOtherField("id_designation", "designation-other-wrapper");
+        toggleOtherField("id_ward", "ward-other-wrapper");
+
+        // Change event handlers
+        $('#id_department').on('change', function () {
+            toggleOtherField("id_department", "department-other-wrapper");
+        });
+
+        // Change event handler for ward
+        $('#id_ward').on('change', function () {
+            toggleOtherField("id_ward", "ward-other-wrapper");
+        });
+
+        $('#id_designation').on('change', function () {
+            toggleOtherField("id_designation", "designation-other-wrapper");
+        });
+
+        // Auto-dismiss Bootstrap alerts after 1.5 seconds
+        $('.alert').each(function() {
+            let alertElement = this;
+            setTimeout(function() {
+                // Using Bootstrap's native JS API to close the alert
+                let bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+                bsAlert.close();
+            }, 4500);
+        });
+    });
+
+    // Spinner Trigger Function (outside document.ready to keep global scope)
+    function showSpinner() {
+        console.log("Showing spinner...");
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function (event) {
+            console.log("Form submitted, showing spinner...");
+            showSpinner();
+        });
+    });
+</script>
+{% endblock %}
+

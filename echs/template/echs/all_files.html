@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block extrahead %}
+<style>
+    #all-files-table thead th,
+    #all-files-table tfoot th {
+        font-size: 0.70rem;
+    }
+    #all-files-table tbody tr,
+    #all-files-table tbody td {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <h5 class="text-left mb-1 fw-bold">All Files</h5>
+    <a href="{% url 'capture:export_all_files_images_excel' %}" class="btn btn-success btn-sm">Excel</a>
+</div>
+
+<div class="table-responsive">
+    <table id="all-files-table" class="table table-striped table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>IP-Tag-Type</th>
+                <th>Name<br>Username<br>Designation<br>Department</th>
+                <th>Date<br>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <div>{{ file.uhid|stringformat:"s"|slice:":2" }}/{{ file.uhid|stringformat:"s"|slice:"2:" }}</div>
+                    <div>
+                        {% if file.custom_tag %}
+                            {{ file.custom_tag.name }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </div>
+                    <div>&nbsp;</div>
+                    <div style="font-size: 0.65rem;""><em>{{ file.source_type }}</em></div>
+                </td>
+                <td>
+                    {{ file.user.full_name }}<br>
+                    <small class="text-muted">{{ file.user.email }}</small><br>
+                    {% if file.user.designation %}
+                        <small>{{ file.user.designation.title }}</small><br>
+                        {% if file.user.designation_other %}
+                            <small>({{ file.user.designation_other }})</small><br>
+                        {% endif %}
+                    {% else %}
+                        <small class="text-muted">N/A</small><br>
+                    {% endif %}
+                    {% if file.user.department %}
+                        <small>{{ file.user.department.name }}</small><br>
+                        {% if file.user.department_other %}
+                            <small>({{ file.user.department_other }})</small><br>
+                        {% endif %}
+                    {% else %}
+                        <small class="text-muted">N/A</small><br>
+                    {% endif %}
+                    <small>{{ file.user.phone }}</small>
+                </td>
+                <td>
+                    {{ file.timestamp|date:"d-M-Y" }}<br>
+                    <small class="text-muted">{{ file.timestamp|time:"h:i:s A" }}</small><br>
+                    <a href="{% if file.image_path %}{{ file.image_path.url }}{% else %}{{ file.file_path.url }}{% endif %}" target="_blank">View File</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+    $(document).ready(function () {
+        $('#all-files-table').DataTable({
+            "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+            "language": {
+                "lengthMenu": "Show _MENU_ files",
+                "info": "Showing _START_ to _END_ of _TOTAL_ files",
+                "infoEmpty": "Showing 0 to 0 of 0 files",
+                "infoFiltered": "(filtered from _MAX_ total files)"
+            },
+            "initComplete": function () {
+                $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+                $('.dataTables_length').css('margin-bottom', '0.5rem');
+                $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extrahead %}
+<style>
+    /* Shrink font size for the whole table */
+    table.table-sm.small th,
+    table.table-sm.small td {
+        font-size: 0.75rem !important;
+        vertical-align: middle;
+    }
+
+    /* Further reduce font size and padding for buttons */
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Specifically target form elements in the Actions column */
+    td:last-child select,
+    td:last-child textarea,
+    td:last-child button {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    /* Make textarea compact (single-line look) */
+    td:last-child textarea {
+        height: 1.8rem;
+        resize: vertical;
+    }
+
+    td:last-child button.btn-sm {
+        float: right;
+    }
+
+    .modal-dialog {
+    margin-top: 60px;
+    max-width: 325px;
+    width: 100%;
+    max-height: 80vh; /* Reduce the modal height to 80% of the viewport */
+    display: flex;
+    flex-direction: column;
+    }
+
+    .modal-content {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    border-radius: 0.5rem;
+    }
+
+    .modal-body {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.70rem;
+    line-height: 1.2;
+    color: #333;
+    max-height: calc(80vh - 120px); /* Subtract modal header/footer approx. height */
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<h5 class="fw-bold" style="font-size: 0.8rem; text-align: left; margin-top: 1rem; margin-bottom: 0.25rem;">
+    All Reported Issues
+</h5>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size: 0.8rem;">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<table id="issues-table" class="table table-bordered table-striped table-sm small">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Issue ID-Date</th>
+            <th>User</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for issue, form in issue_data %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+                {{ issue.issue_id }}<br>
+                {{ issue.created_at|date:"Y-m-d H:i" }}
+            </td>
+            <td>
+                {{ issue.user.get_full_name }}<br>
+                <small>{{ issue.user.email }}</small><br>
+
+                {% if issue.user.designation %}
+                    <small>{{ issue.user.designation.title }}</small><br>
+                {% else %}
+                    <small>{{ issue.user.designation_other }}</small><br>
+                {% endif %}
+
+                {% if issue.user.department %}
+                    <small>{{ issue.user.department.name }}</small>
+                {% else %}
+                    <small>{{ issue.user.department_other }}</small>
+                {% endif %}
+            </td>
+            <td>
+                <form method="post" class="issue-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="issue_id" value="{{ issue.id }}">
+                    
+                    {{ form.admin_remark }}
+                    {{ form.current_status }}
+
+                    <button type="submit" class="btn btn-primary btn-sm mt-1 update-btn" disabled>
+                        Update
+                    </button>
+
+                    <button type="button" 
+                            class="btn btn-info btn-sm mt-1 me-2" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#issueModal"
+                            data-issue-id="{{ issue.issue_id }}"
+                            data-created-at="{{ issue.created_at|date:'Y-m-d H:i' }}"
+                            data-description="{{ issue.description|default:''|escapejs }}"
+                            data-attachment-url="{% if issue.attachment %}{{ issue.attachment.url }}{% endif %}"
+                            data-status="{{ issue.get_current_status_display }}"
+                            data-admin-remark="{{ issue.admin_remark|default:''|escapejs }}">
+                        View
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Issue Details Modal -->
+<div class="modal fade" id="issueModal" tabindex="-1" aria-labelledby="issueModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="issueModalLabel">Issue Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Issue ID:</dt>
+                    <dd class="col-sm-9" id="modal-issue-id"></dd>
+
+                    <dt class="col-sm-3">Reported On:</dt>
+                    <dd class="col-sm-9" id="modal-created-at"></dd>
+
+                    <dt class="col-sm-3 mt-3">Description:</dt>
+                    <dd class="col-sm-9" id="modal-description"></dd>
+
+                    <dt class="col-sm-3 mt-3">Attachment:</dt>
+                    <dd class="col-sm-9" id="modal-attachment">
+                        <!-- Image preview or file link will go here -->
+                    </dd>
+
+                    <dt class="col-sm-3">Status:</dt>
+                    <dd class="col-sm-9" id="modal-status"></dd>
+
+                    <dt class="col-sm-3">Support Remark:</dt>
+                    <dd class="col-sm-9" id="modal-admin-remark"></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#issues-table').DataTable({
+        dom: '<"top"lfi>rt<"bottom"p><"clear">',
+        language: {
+            lengthMenu: "Show _MENU_ issues",
+            info: "Showing _START_ to _END_ of _TOTAL_ issues",
+            infoEmpty: "Showing 0 to 0 of 0 issues",
+            infoFiltered: "(filtered from _MAX_ total issues)",
+            search: "Search:"
+        },
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        order: [[1, 'desc']],
+        initComplete: function () {
+            $('.dataTables_wrapper').css({
+                display: 'flex',
+                'flex-wrap': 'wrap'
+            });
+            $('.dataTables_length').css('margin-bottom', '0.5rem');
+            $('.dataTables_paginate').css({
+                'margin-top': '0.5rem',
+                'margin-left': 'auto'
+            });
+        }
+    });
+
+
+    // Modal population
+    var issueModal = document.getElementById('issueModal');
+
+    issueModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+
+        var issueId = button.getAttribute('data-issue-id');
+        var createdAt = button.getAttribute('data-created-at');
+        var description = button.getAttribute('data-description');
+        var attachmentUrl = button.getAttribute('data-attachment-url');
+        var status = button.getAttribute('data-status');
+        var adminRemark = button.getAttribute('data-admin-remark');
+
+        issueModal.querySelector('#modal-issue-id').textContent = issueId;
+        issueModal.querySelector('#modal-created-at').textContent = createdAt;
+        issueModal.querySelector('#modal-description').textContent = description;
+        issueModal.querySelector('#modal-status').textContent = status;
+        issueModal.querySelector('#modal-admin-remark').textContent = adminRemark;
+
+        var attachmentContainer = issueModal.querySelector('#modal-attachment');
+        attachmentContainer.innerHTML = '';
+
+        if (attachmentUrl) {
+            var ext = attachmentUrl.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) {
+                var img = document.createElement('img');
+                img.src = attachmentUrl;
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                attachmentContainer.appendChild(img);
+            } else {
+                var link = document.createElement('a');
+                link.href = attachmentUrl;
+                link.textContent = 'Download Attachment';
+                link.target = '_blank';
+                attachmentContainer.appendChild(link);
+            }
+        } else {
+            attachmentContainer.textContent = 'No attachment';
+        }
+    });
+
+    // Enable update button on form input/change
+    document.querySelectorAll('form.issue-form').forEach(function(form) {
+        const remark = form.querySelector('textarea');
+        const status = form.querySelector('select');
+        const updateBtn = form.querySelector('.update-btn');
+
+        if (!remark || !status || !updateBtn) return;
+
+        updateBtn.disabled = true;
+
+        function enableButton() {
+            updateBtn.disabled = false;
+        }
+
+        remark.addEventListener('input', enableButton);
+        status.addEventListener('change', enableButton);
+    });
+
+    // Auto dismiss alerts
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 1400);
+});
+</script>
+{% endblock %}
+

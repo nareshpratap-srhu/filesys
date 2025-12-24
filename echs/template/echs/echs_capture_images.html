@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Include Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="position: relative;">
+
+        <h4 class="mb-2" style="display: flex; justify-content: space-between; align-items: center;">
+            Image Capture: {{ uhid|slice:":2" }}/{{ uhid|slice:"2:" }}
+            <button id="toggle-camera-btn" class="btn btn-secondary" title="Switch Camera" 
+                style="margin-left: 10px; font-size: 0.8rem; padding: 5px 8px;">
+                <i class="fas fa-camera-retro" style="font-size: 1rem;"></i>
+            </button> 
+        </h4> 
+        <h6 class="mb-2 text-customcolor" style="text-align: left;">Patient Name : {{patient_name}}</h6>
+
+        <!--  searchable dropdown -->
+        <div class="mb-4">
+            <label for="custom-tag-select"><strong>Select Tag</strong></label>
+            <select id="custom-tag-select" class="form-control" style="width: 100%" data-uhid="{{ uhid }}"
+        data-check-url="{% url 'echs:check_discharge_status' %}" required>
+                <option value="" selected>-- Select a Tag --</option>
+		            {% for tag in custom_tags %}
+                        {% if tag.type == "Universal" or tag.type == "Geo-Pic" %}
+                            <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+            </select>
+            <!-- <input type="hidden" id="custom-tag-input" name="tag_id"> -->
+        </div>
+        
+        <!-- Success message container -->
+        <div id="success-message" style="display:none; margin-top: 10px;">
+            <h6 class="text-success"><strong>Uploaded Successfully!</strong></h6>
+        </div>
+
+        
+        <div id="camera-container">
+
+            <div id="camera-message-container" class="alert alert-danger" style="display: none;"></div>
+            <button id="retry-camera-btn" class="btn btn-primary" style="display: none;">Request Permission</button>
+
+            <div class="video-wrapper">
+                <video id="video" autoplay playsinline muted></video>
+                <button id="start-camera-btn">
+                    <i class="fas fa-camera"></i> Start Camera
+                  </button>
+            </div>
+
+            <canvas id="canvas" style="display:none;"></canvas>
+        
+            <div id="buttons-container" style="display: flex; gap: 10px;">
+                <button id="capture-btn" class="btn btn-primary small-btn">Capture</button>
+                <button id="retake-btn" class="btn btn-warning small-btn">Re-Take</button>
+                <button id="upload-btn" class="btn btn-success small-btn">Upload</button>
+                <button id="cancel-btn" class="btn btn-primary small-btn" data-url="{% url 'echs:echs_uhid_options'%}?uhid={{ uhid }}">Cancel</button>
+            </div>
+
+            <!-- New buttons after upload -->
+            <div id="new-buttons-container" style="display:none;">
+                <button id="more-photos-btn" class="btn btn-primary">More for {{ uhid }}</button>
+                <button id="home-btn" class="btn btn-secondary " data-url="{% url 'echs:uhid_capture_camera' %}">Home</button>
+            </div>
+            
+            <!-- Image details container -->
+            <div id="image-details" style="display: none; margin-top: 10px;">
+                <p><strong>Image Size:</strong> <span id="image-size"></span></p>
+                <p><strong>Latitude:</strong> <span id="latitude"></span></p>
+                <p><strong>Longitude:</strong> <span id="longitude"></span></p>
+            </div>
+
+        </div>
+        
+        <form id="image-form" method="POST" enctype="multipart/form-data" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="image_data" id="image-data">
+            <input type="hidden" name="uhid" id="uhid-input"> <!-- Hidden input for UHID -->
+        </form>
+
+</div>
+
+    
+{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'echs/js/capture_images.js' %}"></script>
+
+<!-- Include jQuery and Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+
+<!-- piexifjs -->
+<script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
+
+<script src="{% static 'echs/js/tag_check.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<style>
+
+    .modal-dialog {
+    margin-top: 60px;
+    max-width: 325px;
+    width: 100%;
+    max-height: 80vh; /* Reduce the modal height to 80% of the viewport */
+    display: flex;
+    flex-direction: column;
+    }
+
+    .modal-content {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    border-radius: 0.5rem;
+    }
+
+    .modal-body {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 2rem;
+    font-size: 0.70rem;
+    line-height: 1.2;
+    color: #333;
+    max-height: calc(80vh - 120px); /* Subtract modal header/footer approx. height */
+    }
+
+  .card .card-header h5 {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .card .card-body p {
+    font-size: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #343a40;
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-left: 5px solid #007bff;
+    border-radius: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    h4 {
+      font-size: 1.0rem;
+    }
+  }
+
+  .card {
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+  }
+
+  .card:hover {
+    transform: scale(1.05);
+  }
+
+  /* Remove underline and keep black color for all cards that are links */
+  a.card {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+  a.card:hover,
+  a.card:focus {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+  .card-body,
+  .card-body a {
+    color: black !important;
+  }
+
+  .card-body a {
+    margin-top: auto;
+  }
+
+  .btn {
+    color: black;
+  }
+  .modal-header {
+  padding: 0.5rem 1rem;   /* Reduce vertical padding */
+  line-height: 1.2;       /* Adjust line height */
+  min-height: 50px;       /* Set a fixed minimum height if needed */
+  }
+
+  .modal-header .modal-title {
+    font-size: 0.9rem;    /* Increase/decrease font size */
+    font-weight: 100;      /* Adjust font weight */
+    line-height: 1;      /* Control spacing */
+  }
+
+  /* Smaller pagination buttons in DataTables */
+  .dataTables_paginate .pagination li a,
+  .dataTables_paginate .pagination li span {
+      padding: 0.01rem 0.7rem;  /* reduce padding */
+      font-size: 0.70rem;       /* smaller font */
+      min-width: 28px;         /* narrower buttons */
+      height: 28px;            /* shorter buttons */
+      line-height: 28px;       /* vertically center text */
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-2">
+  <h4 class="mb-4">Configuration Dashboard</h4>
+
+  {% if messages %}
+    <div class="alert alert-info">
+      {% for message in messages %}
+        <p class="mb-0">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Configuration Cards -->
+  <div class="row">
+    
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'members:manage_departments' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-primary text-white"><h5 class="mb-0">Manage Departments</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'members:manage_wards' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-warning text-dark"><h5 class="mb-0">Manage Wards</h5></div>
+      </a>
+    </div>
+
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'members:manage_designations' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-secondary text-white"><h5 class="mb-0">Manage Designations</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'members:user_approval' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-success text-white"><h5 class="mb-0">User<br>Approvals</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'members:manage_custom_tags' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-warning text-white"><h5 class="mb-0">Manage<br>Tags</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'capture:uploaded_files_info' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-primary text-white"><h5 class="mb-0">Uploaded<br>Files List</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'capture:uploaded_images_info' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-secondary text-white"><h5 class="mb-0">Uploaded<br>Images</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'capture:captured_images_info' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-success text-white"><h5 class="mb-0">Captured<br>Images</h5></div>
+      </a>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <a href="{% url 'capture:all_file_image_info' %}" class="card shadow-sm h-100 w-100">
+        <div class="card-header bg-warning text-white"><h5 class="mb-0">All Files<br>& Images</h5></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Modals Cards -->
+  <h4 class="mb-4 mt-2">Usage Stats</h4>
+
+  <div class="row">
+    <!-- Each card now triggers a modal -->
+    <div class="col-md-6 mb-4 d-flex">
+      <div class="card shadow-sm h-100 w-100" data-bs-toggle="modal" data-bs-target="#departmentsModal">
+        <div class="card-header bg-primary text-white"><h5 class="mb-0">Departments</h5></div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          <p class="mb-0 display-4 fw-bold">{{ total_departments }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <div class="card shadow-sm h-100 w-100" data-bs-toggle="modal" data-bs-target="#usersModal">
+        <div class="card-header bg-secondary text-white"><h5 class="mb-0">All Users</h5></div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          <p class="mb-0 display-4 fw-bold">{{ total_users }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <div class="card shadow-sm h-100 w-100" data-bs-toggle="modal" data-bs-target="#filesModal">
+        <div class="card-header bg-success text-white"><h5 class="mb-0">All Files</h5></div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          <p class="mb-0 display-4 fw-bold">{{ total_files }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4 d-flex">
+      <div class="card shadow-sm h-100 w-100" data-bs-toggle="modal" data-bs-target="#tagsModal">
+        <div class="card-header bg-warning text-white"><h5 class="mb-0">All Tags</h5></div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          <p class="mb-0 display-4 fw-bold">{{ total_tags }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals (Added at the bottom to preserve layout) -->
+
+<!-- Department Stats Modal -->
+<div class="modal fade" id="departmentsModal" tabindex="-1" aria-labelledby="departmentsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="departmentsModalLabel">
+          All Departments ({{ total_departments }})
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table id="departmentsTable" class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Department ({{ total_departments }})</th>
+                <th>Users ({{ sum_users }})</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dept in department_stats %}
+              <tr>
+                <td>{{ dept.sno }}</td>
+                <td>{{ dept.name }}</td>
+                <td>{{ dept.user_count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Users Stats Modal -->
+<div class="modal fade" id="usersModal" tabindex="-1" aria-labelledby="usersModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title" id="usersModalLabel">
+          All Users ({{ total_users }})
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table id="usersTable" class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>User ({{ sum_users }})</th>
+                <th>Files ({{ total_files }})</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in user_stats %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.total_files }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Files Stats Modal -->
+<div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="filesModalLabel">
+          All Files : {{ total_files }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table id="filesTable" class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Department ({{ total_departments }})</th>
+                <th>Images ({{ sum_images }})</th>
+                <th>Files ({{ sum_files }})</th>
+                <th>Total ({{ sum_total }})</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dept in department_stats %}
+              <tr>
+                <td>{{ dept.sno }}</td>
+                <td>{{ dept.name }}</td>
+                <td>{{ dept.image_count }}</td>
+                <td>{{ dept.file_count }}</td>
+                <td>{{ dept.total }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tags Stats Modal -->
+<div class="modal fade" id="tagsModal" tabindex="-1" aria-labelledby="tagsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="tagsModalLabel">
+          Active Tags ({{ total_tags }})
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table id="tagsTable" class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Tag ({{ total_tags }})</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tag in tags %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ tag.name }}</td>
+                <td>{{ tag.type }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+$(document).ready(function () {
+    // Departments Table
+    $('#departmentsTable').DataTable({
+        "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+        "language": {
+            "lengthMenu": "Show _MENU_ departments",
+            "info": "Showing _START_ to _END_ of _TOTAL_ departments",
+            "infoEmpty": "No departments available",
+            "infoFiltered": "(filtered from _MAX_ total departments)"
+        },
+        "initComplete": function () {
+            $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+            $('.dataTables_length').css('margin-bottom', '0.5rem');
+            $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+        }
+    });
+
+    // Users Table
+    $('#usersTable').DataTable({
+        "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+        "language": {
+            "lengthMenu": "Show _MENU_ users",
+            "info": "Showing _START_ to _END_ of _TOTAL_ users",
+            "infoEmpty": "No users available",
+            "infoFiltered": "(filtered from _MAX_ total users)"
+        },
+        "initComplete": function () {
+            $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+            $('.dataTables_length').css('margin-bottom', '0.5rem');
+            $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+        }
+    });
+
+    // Files Table
+    $('#filesTable').DataTable({
+        "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+        "language": {
+            "lengthMenu": "Show _MENU_ records",
+            "info": "Showing _START_ to _END_ of _TOTAL_ records",
+            "infoEmpty": "No files available",
+            "infoFiltered": "(filtered from _MAX_ total files)"
+        },
+        "initComplete": function () {
+            $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+            $('.dataTables_length').css('margin-bottom', '0.5rem');
+            $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+        }
+    });
+
+    // Tags Table
+    $('#tagsTable').DataTable({
+        "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+        "language": {
+            "lengthMenu": "Show _MENU_ tags",
+            "info": "Showing _START_ to _END_ of _TOTAL_ tags",
+            "infoEmpty": "No tags available",
+            "infoFiltered": "(filtered from _MAX_ total tags)"
+        },
+        "initComplete": function () {
+            $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+            $('.dataTables_length').css('margin-bottom', '0.5rem');
+            $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+        }
+    });
+});
+</script>
+{% endblock %}
+

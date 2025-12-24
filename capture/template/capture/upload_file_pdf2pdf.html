@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'capture/css/upload_file.css' %}">  <!-- Links your CSS for styling -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />  <!-- Select2 for the dropdown -->
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h4 class="mt-4">
+        Selected IP: {{ uhid|slice:":2" }}/{{ uhid|slice:"2:" }}  <!-- Show UHID in two-digit chunks -->
+    </h4>
+
+    <div class="alert alert-info d-flex align-items-center mt-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Uploads Multiple PDFs and uploads them individually.  <!-- Updated description -->
+    </div>
+
+    <form id="upload-form" method="POST" enctype="multipart/form-data" novalidate>  <!-- Must use multipart/form-data for file uploads :contentReference[oaicite:1]{index=1} -->
+        {% csrf_token %}
+        <input type="hidden" name="uhid" value="{{ uhid }}">  <!-- Include UHID in form data -->
+
+        <div class="form-group mt-3">
+            <label for="custom-tag-select">Custom Tag (Mandatory)</label>
+            <select name="custom-tag-select" id="custom-tag-select"
+                    class="form-control" style="width: 100%;" required>  <!-- Select2-enabled dropdown -->
+                <option value="" selected>-- Select a Tag --</option>
+                {% for tag in custom_tags %}
+                    {% if tag.type == "Universal" or tag.type == "File Only" %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="file">Choose PDF Files</label>
+            <input
+                type="file"
+                name="files"
+                id="file"
+                class="form-control"
+                accept="application/pdf"
+                multiple
+                required
+            >
+        </div>
+
+        <div id="preview-card" class="card mt-3" style="display: none;">
+            <div class="card-header bg-light">
+                <strong>Selected PDFs</strong>  <!-- Updated heading -->
+            </div>
+            <ul class="list-group list-group-flush" id="file-preview-list"></ul>
+        </div>
+
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-success" id="upload-button" disabled>Upload</button>
+            <a href="{% url 'capture:uhid_options' %}?uhid={{ uhid }}" class="btn btn-secondary">Back</a>
+        </div>
+    </form>
+
+    <div id="success-message" class="alert alert-success mt-3" style="display:none;">
+        Files uploaded successfully!  <!-- Updated success copy -->
+    </div>
+
+    <div id="processing-message" class="alert alert-info mt-3" style="display:none;">
+        <strong>Processing...</strong>
+        <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.7/dist/compressor.min.js"></script>  <!-- Compressor.js still in includes but no longer used -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>  <!-- PDFLib not used for merging now -->
+<script src="{% static 'capture/js/upload_file_pdf2pdf.js' %}"></script>  <!-- Our updated JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#custom-tag-select').select2({
+            placeholder: "-- Select a Tag --",
+            allowClear: true
+        });  <!-- Initialize Select2 on the dropdown :contentReference[oaicite:4]{index=4} -->
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<style>
+  .manage-list { max-width: 800px; margin: auto; }
+  .abbr { font-size: .85rem; font-style: italic; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 manage-list">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-center mb-3">🏥 Manage Wards</h5>
+    <a href="{% url 'members:export_ward_list_excel' %}" class="btn btn-success btn-sm">
+        Excel
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h6 class="mb-0">Add New Ward</h6>
+    </div>
+    <div class="card-body">
+      <form method="post" id="add-ward-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-success" data-action="add-ward">Add Ward</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Wards -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h6 class="mb-0">Active Wards</h6>
+    </div>
+    <ul class="list-group list-group-flush" id="active-ward-list">
+      {% for ward in active_wards %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ forloop.counter }}.</strong> {{ ward.ward_name }}<br>
+            <span class="abbr">{{ ward.ward_abbre }}</span>
+          </div>
+          <form method="post" action="{% url 'members:deactivate_ward' ward.id %}" id="deactivate-ward-form-{{ ward.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" data-action="deactivate">Deactivate</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No active wards.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Inactive Wards -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h6 class="mb-0">Inactive Wards</h6>
+    </div>
+    <ul class="list-group list-group-flush" id="inactive-ward-list">
+      {% for ward in inactive_wards %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ forloop.counter }}.</strong> {{ ward.ward_name }}<br>
+            <span class="abbr">{{ ward.ward_abbre }}</span>
+          </div>
+          <form method="post" action="{% url 'members:restore_ward' ward.id %}" id="restore-ward-form-{{ ward.id }}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-success">Restore</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No inactive wards.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    function showSpinner() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.style.display = 'flex';
+      else console.warn('#loading-overlay not found, skipping spinner');
+    }
+
+    document.querySelectorAll('form').forEach(f =>
+      f.addEventListener('submit', showSpinner)
+    );
+
+    setTimeout(() => {
+      document.querySelectorAll('.alert').forEach(a =>
+        bootstrap.Alert.getOrCreateInstance(a).close()
+      );
+    }, 2000);
+  });
+</script>
+{% endblock %}

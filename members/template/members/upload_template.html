@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block extrahead %}{% endblock %}
+
+{% block content %}
+
+  <!-- Display Django Messages -->
+  {% if messages %}
+    <div class="alert alert-info">
+      {% for message in messages %}
+        <p class="mb-0">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Upload Form -->
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+      {{ form.file.label_tag }}
+      {{ form.file }}
+      {{ form.file.errors }}
+    </div>
+    <a href="{% url 'members:download_user_template' %}" class="btn btn-primary">
+      Download Excel Template
+    </a>
+    <button type="submit" class="btn btn-success">Upload Excel</button>
+  </form>
+
+  <!-- Results Table -->
+  {% if results %}
+    <div class="mt-4">
+      <h5>Upload Summary: {{ summary }}</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm mt-2">
+          <thead class="table-light">
+            <tr>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in results %}
+              <tr>
+                <td>{{ item.email }}</td>
+                <td>
+                  <span class="{% if item.success %}text-success{% else %}text-danger{% endif %}">
+                    {{ item.symbol }}
+                  </span>
+                  {{ item.message }}
+                </td>
+                <td>
+                  {% if item.changes %}
+                    <ul class="mb-0 ps-3">
+                      {% for change in item.changes %}
+                        <li>{{ change }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <span class="text-muted">No changes</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block extrascripts %}{% endblock %}

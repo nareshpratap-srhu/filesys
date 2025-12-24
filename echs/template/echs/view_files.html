@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+{% block extrahead %}
+<style>
+    .tiny-alert .swal2-icon {
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 20px !important;
+    margin: 5px auto !important;
+    }
+</style>
+{% endblock %}
+
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <p class="mt-1" style="font-size: 0.975rem;"><strong>
+            Selected IP: {{ uhid|slice:":2" }}/{{ uhid|slice:"2:" }}</strong>
+        </p>
+
+        <!-- Download all files button -->
+        <a href="{% url 'echs:download_all_files' uhid=uhid %}" class="text-decoration-none p-0 m-0"><i class="fas fa-download" style="font-size: 1rem;"></i></a>
+    </div>
+
+        <div class="row">
+            <h6 class="text-customcolor">Patient Name : {{patient_name}}</h6>
+        </div>
+
+        {% if request.GET.deleted %}
+            <div id="file-delete-message" class="alert alert-warning mt-3">
+                File deleted successfylly!
+            </div>
+        {% endif %}
+
+    <div class="row">
+        {% for file in files %}
+        <div class="col-12 mb-1">
+            <div class="card w-100">
+                <div class="card-body d-flex flex-column">
+                    <p class="card-title text-break" style="font-size: 0.975rem;">{{ file.filename }}</p>
+                    <p class="card-text mb-1" style="font-size: 0.775rem;">
+                        {% if file.custom_tag %}
+                            <strong>Tag: {{ file.custom_tag }}</strong><br>
+                        {% endif %}
+                        On: {{ file.formatted_datetime }}<br>
+                        By: {{ file.user.full_name }}<br> 
+
+                            {% if file.user.designation %}
+                                {{ file.user.designation.title }}
+                                {% if file.user.designation_other %}
+                                    ({{ file.user.designation_other }})
+                                {% endif %}
+                                <br>
+                            {% endif %}
+                            
+                            {% if file.user.department %}
+                                {{ file.user.department.name }}
+                                {% if file.user.department_other %}
+                                    ({{ file.user.department_other }})
+                                {% endif %}
+                                <br>
+                            {% endif %}
+
+                        {{ file.file_size_kb }} KB ({{ file.file_size_mb }} MB)
+
+
+                    </p>
+                 
+                    <div class="mt-auto text-end">
+                        {% if file.user_id == request.user.id %}
+                           <i class="fas fa-trash-alt me-3"
+                                       style="font-size: 1.3rem; color: rgb(212, 23, 23); cursor: pointer;"
+                                       onclick="confirmDelete('{% url 'echs:delete_uploaded_pdf' file.id %}')">
+                            </i>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#previewModal{{ forloop.counter }}">Preview</button>
+                        <a href="{{ file.file_path.url }}" download class="btn btn-success btn-sm">Download</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Modal -->
+            <div class="modal fade" id="previewModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="previewModalLabel{{ forloop.counter }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="max-width: 375px; margin: auto;"> <!-- Approx. mobile width -->
+                <div class="modal-header py-2">
+                    <h6 class="modal-title" id="previewModalLabel{{ forloop.counter }}">PDF Preview</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe src="{{ file.file_path.url }}" style="width: 100%; height: 500px;" frameborder="0"></iframe>
+                </div>
+                </div>
+            </div>
+            </div>
+
+
+        </div>
+        {% empty %}
+        <p>No files uploaded yet.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="{% url 'echs:echs_uhid_options'%}?uhid={{ uhid }}" class="btn btn-secondary">Back</a>
+    </div>
+    
+</div>
+
+{% endblock %}
+
+{% block extrascripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+            const msg = document.getElementById('file-delete-message');
+            if (msg) {
+                setTimeout(() => msg.style.display = 'none', 5000);
+            }
+        });  
+
+    function confirmDelete(deleteUrl) {
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You want ot delete this image.",
+        icon: "warning",
+        width: "350px",         
+        padding: "0.5rem",       
+        showCancelButton: true,
+        customClass: {
+            popup: "tiny-alert"
+        },
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                window.location.href = deleteUrl;
+            }
+        });
+    }
+</script>
+{% endblock %}

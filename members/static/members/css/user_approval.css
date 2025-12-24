@@ -1,0 +1,59 @@
+
+.user-approval {
+    max-width: 900px;
+    margin: auto;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+    font-size: 0.85rem;
+    word-break: break-word;
+}
+
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.btn-group form {
+    display: inline;
+}
+
+.btn-group .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.alert {
+    font-size: 0.85rem;
+}
+
+@media (max-width: 576px) {
+    .btn-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+
+    .table td, .table th {
+        font-size: 0.75rem;
+    }
+}
+
+/* Reduce font size for DataTable header, footer, and controls */
+#userTable thead th,           /* Header cells */
+#userTable tfoot th {           /* Footer cells */     /* Search box input */
+    font-size: 0.75rem;          /* Adjust the font size */
+}

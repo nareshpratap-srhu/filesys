@@ -1,0 +1,41 @@
+#uhid,
+#confirm-uhid {
+    text-align: center;       /* Horizontal centering */
+    height: 40px;             /* Set consistent height */
+    padding-top: 0;           /* Remove top padding */
+    padding-bottom: 0;        /* Remove bottom padding */
+    display: flex;
+    align-items: center;      /* Vertical centering */
+    justify-content: center;  /* Horizontal centering */
+    font-size: 2.2rem;
+    border: 2px solid #666768;
+}
+
+#uhid::placeholder,
+#confirm-uhid::placeholder {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #0266bd;
+    opacity: 1;
+    border: 2px solid #666768;
+}
+
+.uhid-group.active-group {
+    border: 2px solid #666768;
+    border-radius: 0.5rem;
+    padding: 0.2rem;
+    background-color: #f0f8ff;
+    transition: all 0.2s ease;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.3rem; /* Adjust size here */
+    user-select: none;
+}
+
+

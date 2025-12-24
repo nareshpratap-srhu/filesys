@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<!-- Custom CSS -->
+<link rel="stylesheet" href="{% static 'members/css/user_approval.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-2 user-approval">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">🛡️ User Approval</h5>
+        <a href="{% url 'members:export_user_list_excel' %}" class="btn btn-success btn-sm">
+            Excel
+        </a>
+</div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center p-2" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+
+    <div class="table-responsive">
+        <table id="userTable" class="table table-bordered table-striped shadow-sm">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User Details<br><small class="text-muted">(Name, Email, Designation, Department, Phone)</small></th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in all_users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <strong>{{ user.full_name }}</strong><br>
+                            <small class="text-muted">{{ user.email }}</small><br>
+                            <small class="text-muted">{{ user.designation }}{% if user.designation_other %} ({{ user.designation_other }}){% endif %}</small><br>
+                            <small class="text-muted">{{ user.department }}{% if user.department_other %} ({{ user.department_other }}){% endif %}</small><br>
+                            <small class="text-muted">{{ user.phone }}</small><br>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <form method="POST" action="{% url 'members:user_approval' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    {% if user.is_approved %}
+                                        <button type="submit" name="action" value="disapprove" class="btn btn-outline-danger">
+                                            Disapprove
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" name="action" value="approve" class="btn btn-outline-success">
+                                            Approve
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                {% if user.is_approved %}
+                                    <form method="POST" action="{% url 'members:reset_password_bysuper' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" name="action" value="reset" class="btn btn-outline-danger">
+                                            Reset Password
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                
+                                {% if user.is_approved and not user.is_active %}
+                                    <form method="POST" action="{% url 'members:unblock_user_bysuper' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" name="action" value="reset" class="btn btn-outline-danger">  
+                                            Unblock User
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">No users pending approval.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+        <a href="{% url 'members:upload_user_template' %}" class="btn btn-secondary">
+            Excel Updates 
+        </a>
+    </div>
+
+
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        $('#userTable').DataTable({
+            "dom": '<"top"lfi>rt<"bottom"p><"clear">',
+            "language": {
+                "lengthMenu": "Show _MENU_ users",
+                "info": "Showing _START_ to _END_ of _TOTAL_ users",
+                "infoEmpty": "Showing 0 to 0 of 0 users",
+                "infoFiltered": "(filtered from _MAX_ total users)"
+            },
+            "initComplete": function () {
+                $('.dataTables_wrapper').css('display', 'flex').css('flex-wrap', 'wrap');
+                $('.dataTables_length').css('margin-bottom', '0.5rem');
+                $('.dataTables_paginate').css('margin-top', '0.5rem').css('margin-left', 'auto');
+            }
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(function () {
+            $('.alert').fadeTo(200, 0).slideUp(200, function () {
+                $(this).remove();
+            });
+        }, 1200);
+
+    // 🔄 Spinner function
+    function showSpinner() {
+        $('#loading-overlay').css('display', 'flex');
+    }
+
+    // ✅ Spinner on specific forms (approve/disapprove/reset/unblock)
+    $('.user-approval form').on('submit', showSpinner);
+
+    // ✅ Spinner on "Back" and "Excel Updates" buttons only
+    $('.user-approval a[href^="javascript:history.back"], .user-approval a[href*="upload_user_template"]').on('click', showSpinner);
+
+
+
+
+    });
+</script>
+{% endblock %}
+
+

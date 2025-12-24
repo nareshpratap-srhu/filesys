@@ -1,0 +1,62 @@
+app_name = "members"
+
+from django.urls import path
+from django.contrib.auth import views as auth_views
+from . import views
+
+urlpatterns = [
+
+    # User registration
+    path('register/', views.register, name='register'),
+
+    # User login
+    path('login/', views.login_view, name='login'),
+
+    # User Approval, Reset Password, Configurations by Superuser
+    path('user-approval/', views.user_approval, name='user_approval'),
+    path('configs/', views.configs, name='configs'),
+    path('manage-custom-tags/', views.manage_custom_tags, name='manage_custom_tags'),
+    path('delete/<int:pk>/', views.delete_custom_tag, name='delete_custom_tag'),
+    path('restore/<int:pk>/', views.restore_custom_tag, name='restore_custom_tag'),
+
+
+    # User logout
+    path('logout/', auth_views.LogoutView.as_view(next_page='members:login'), name='logout'),
+
+    # Profile update page
+    path('profile/', views.profile, name='profile'),
+    path('profile/update/', views.profile_update, name='profile_update'),  # New path for profile update
+
+    # Password Reset Workflow (Using clean template names 🔥)
+    path('password-reset/', 
+        auth_views.PasswordResetView.as_view(
+            template_name='members/password_reset.html',             
+            email_template_name='members/password_reset_email.html',       
+            subject_template_name='members/password_reset_subject.txt',    
+            success_url='/members/password-reset/done/'
+        ),
+        name='password_reset'
+    ),
+
+    path('password-reset/done/',
+        auth_views.PasswordResetDoneView.as_view(
+            template_name='members/password_reset_done.html'                
+        ),
+        name='password_reset_done'
+    ),
+
+    path('reset/<uidb64>/<token>/', 
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name='members/password_reset_confirm.html',            
+            success_url='/members/reset/done/'
+        ),
+        name='password_reset_confirm'
+    ),
+
+    path('reset/done/',
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name='members/password_reset_complete.html'           
+        ),
+        name='password_reset_complete'
+    ),
+]

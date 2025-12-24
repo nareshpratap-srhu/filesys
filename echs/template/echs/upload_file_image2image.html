@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'capture/css/upload_file.css' %}">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h4 class="mt-4">
+        Selected IP: {{ uhid|slice:":2" }}/{{ uhid|slice:"2:" }}
+    </h4>
+
+    <h6 class="mb-2 text-customcolor" style="text-align: left;">Patient Name : {{patient_name}}</h6>
+
+    <div class="alert alert-info d-flex align-items-center mt-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Uploads Single (GPS) Picture in Image format only.
+    </div>
+    
+
+    <form id="upload-form" method="POST" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="uhid" value="{{ uhid }}">
+
+        <div class="form-group mt-3">
+            <label for="custom-tag-select">Custom Tag (Mandatory)</label>
+            <select name="custom-tag-select" id="custom-tag-select" class="form-control" style="width: 100%;" data-uhid="{{ uhid }}"
+        data-check-url="{% url 'echs:check_discharge_status' %}" required>
+                <option value="" selected>-- Select a Tag --</option>
+                    {% for tag in custom_tags %}
+                        {% if tag.type == "Universal" or tag.type == "Geo-Pic" %}
+                            <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+            </select>
+            <input type="hidden" id="custom-tag-input" name="tag_id">
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="file">Choose Image File</label>
+            <input
+                type="file"
+                name="file"
+                id="file"
+                class="form-control"
+                accept="image/*"
+                required
+            >
+        </div>
+
+        <div id="preview-card" class="card mt-3" style="display: none;">
+            <div class="card-header bg-light">
+                <strong>Selected Image</strong>
+            </div>
+            <ul class="list-group list-group-flush" id="file-preview-list"></ul>
+            <div id="compression-message" class="text-muted small ms-3 mt-1" style="display: none;"></div>
+        </div>
+
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-success" id="upload-button" disabled>Upload</button>
+            <a href="{% url 'echs:echs_uhid_options' %}?uhid={{ uhid }}" class="btn btn-secondary">Back</a>
+
+        </div>
+    </form>
+
+    <div id="success-message" class="alert alert-success mt-3" style="display:none;">
+        File uploaded successfully!
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+  <!-- Compressor.js, jQuery, Select2 libs as before -->
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.7/dist/compressor.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+  <!-- 1) Define spinner functions up‑front -->
+  <script>
+    // Show/hide the full‐screen loading overlay
+    function showSpinner() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.style.display = 'flex';
+      else console.warn('#loading-overlay not found');
+    }
+    function hideSpinner() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.style.display = 'none';
+      else console.warn('#loading-overlay not found');
+    }
+    // Expose globally
+    window.showSpinner = showSpinner;
+    window.hideSpinner = hideSpinner;
+  </script>
+
+  <!-- 2) Your custom upload script can now capture the real functions -->
+  <script src="{% static 'capture/js/upload_file_image2image.js' %}"></script>
+  <script src="{% static 'echs/js/tag_check.js' %}"></script>
+
+  <!-- 3) Initialize Select2 and auto‐dismiss alerts -->
+  <script>
+    $(function() {
+      // $('#custom-tag-select').select2({
+      //   placeholder: "-- Select a Tag --",
+      //   allowClear: true
+      // });
+
+      // Bind spinner to the form submit (in case upload script forgot)
+      const form = document.getElementById('upload-form');
+      if (form) form.addEventListener('submit', window.showSpinner);
+
+      // Auto‐hide success alert after 2s
+      setTimeout(() => {
+        const successMsg = document.getElementById('success-message');
+        if (successMsg && successMsg.style.display !== 'none') {
+          bootstrap.Alert.getOrCreateInstance(successMsg).close();
+        }
+      }, 2000);
+    });
+  </script>
+{% endblock %}
+

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<style>
+    .custom-tags {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .abbreviation {
+        font-size: 0.85rem;
+        font-style: italic;
+        color: #6c757d;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .tag-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-2 custom-tags">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-center mb-3">🏢 Manage Tags</h5>
+      <a href="{% url 'members:export_tag_list_excel' %}" class="btn btn-success btn-sm">
+          Excel
+      </a>
+  </div>
+
+  <!-- Display messages -->
+  {% if messages %}
+    <div id="message-container">
+      {% for message in messages %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Card: Add New Tag -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">
+      <h6 class="mb-0">Add New Custom Tag</h6>
+    </div>
+    <div class="card-body">
+      <form method="POST" id="add-tag-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Add Tag</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Card: Active Tags -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h6 class="mb-0">Active Tags</h6>
+    </div>
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush" id="active-tags-list">
+        {% for tag in active_tags %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="tag-item">
+              <div><strong>{{ forloop.counter }}.</strong>{{ tag.name }}</div>
+              
+              {% if tag.abbreviation %}
+                <span class="abbreviation">{{ tag.abbreviation }}</span>                
+              {% endif %}
+
+              {% if tag.type %}
+                <span class="abbreviation">{{ tag.type }}</span>                
+              {% endif %}
+
+            </div>
+            <form method="POST" action="{% url 'members:delete_custom_tag' tag.id %}" id="deactivate-tag-form-{{ tag.id }}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No active tags available.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card: Inactive Tags -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <h6 class="mb-0">Inactive Tags</h6>
+    </div>
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush" id="inactive-tags-list">
+        {% for tag in inactive_tags %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="tag-item">
+              <div><strong>{{ forloop.counter }}.</strong>{{ tag.name }}</div>
+              {% if tag.abbreviation %}
+                <span class="abbreviation">{{ tag.abbreviation }}</span>
+              {% endif %}
+
+              {% if tag.type %}
+                <span class="abbreviation">{{ tag.type }}</span>                
+              {% endif %}
+              
+            </div>
+            <form method="POST" action="{% url 'members:restore_custom_tag' tag.id %}" id="restore-tag-form-{{ tag.id }}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+            </form>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No inactive tags.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+  // Spinner Trigger Function
+  function showSpinner() {
+      console.log("Showing spinner...");  // Debugging log to see if function is called
+      document.getElementById('loading-overlay').style.display = 'flex';
+  }
+
+  // Add event listener to trigger spinner on form submit (Add, Deactivate, Restore)
+  document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function (event) {
+          console.log("Tag Form submitted, showing spinner...");
+          showSpinner();  // Show spinner when the form is submitted
+      });
+  });
+
+  // Auto-dismiss alerts after 2 seconds
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+      bootstrap.Alert.getOrCreateInstance(a).close();
+    });
+  }, 2000);
+</script>
+{% endblock %}
+

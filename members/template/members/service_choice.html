@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<style>
+  .card .card-header h5 {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .card .card-body p {
+    font-size: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #343a40;
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-left: 5px solid #007bff;
+    border-radius: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    h4 {
+      font-size: 1.0rem;
+    }
+  }
+
+  .card {
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+  }
+
+  .card:hover {
+    transform: scale(1.05);
+  }
+
+  /* Remove underline and keep black color for all cards that are links */
+  a.card {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+  a.card:hover,
+  a.card:focus {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+   <div class="container mt-2">
+      <h4 class="mb-4">Select Service</h4>
+
+      <div class="row">
+    
+        <div class="col-md-6 mb-4 d-flex">
+          <a href="{% url 'capture:uhid_capture_camera' %}" class="card shadow-sm h-100 w-100">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0">Ayushman</h5></div>
+          </a>
+        </div>
+      
+        <div class="col-md-6 mb-4 d-flex">
+          <a href="{% url 'echs:uhid_capture_camera' %}" class="card shadow-sm h-100 w-100">
+            <div class="card-header bg-warning text-dark"><h5 class="mb-0">ECHS</h5></div>
+          </a>
+        </div>
+
+      </div>
+    </div>
+{% endblock %}
+
+{% block extrascripts %}
+
+{% endblock %}

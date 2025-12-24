@@ -1,0 +1,57 @@
+.delete-file {
+    display: inline-block;
+    color: #dc3545; /* Red color for delete icon */
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.delete-file:hover {
+    color: #bb2d3b;  /* Darker red when hovered */
+}
+
+
+/* List item containing file name */
+#file-preview-list li {
+    white-space: nowrap;            /* Prevents text from wrapping */
+    overflow: hidden;               /* Hides overflowed content */
+    text-overflow: ellipsis;        /* Adds ellipsis (...) if the content overflows */
+    display: flex;                  /* Use flexbox to align items */
+    align-items: center;            /* Vertically centers the content */
+    justify-content: space-between; /* Distribute space between the content */
+}
+
+/* Container for the file name */
+#file-preview-list li div {
+    max-width: 80%;                 /* Limits the width to 80% of the container */
+    overflow: hidden;               /* Hides overflowing content */
+    text-overflow: ellipsis;        /* Adds ellipsis (...) for overflowed text */
+    white-space: nowrap;            /* Prevents wrapping inside the div */
+    position: relative;             /* Make sure tooltip is positioned relative to this element */
+}
+
+/* Small text styling (Tag and file size) */
+#file-preview-list li small {
+    display: inline-block;          /* Keeps small text inline */
+    white-space: nowrap;            /* Prevents wrapping inside the small tag */
+}
+
+/* Tooltip container - hidden by default */
+#file-preview-list li div .tooltip {
+    visibility: hidden;             /* Hidden by default */
+    position: absolute;             /* Positioned absolutely relative to the div */
+    top: 100%;                      /* Place tooltip below the file name */
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.7);  /* Dark background */
+    color: white;                   /* White text color */
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1;
+    width: 100%;                    /* Makes sure the tooltip is the same width as the div */
+    box-sizing: border-box;         /* Ensures the padding doesn't overflow */
+}
+
+/* Show tooltip on hover */
+#file-preview-list li div:hover .tooltip {
+    visibility: visible;            /* Make the tooltip visible when hovering */
+}

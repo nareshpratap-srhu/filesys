@@ -1,0 +1,167 @@
+/* General styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure the content section fits between header and footer */
+.content-container {
+    padding-top: 60px;  /* Offset for fixed header */
+    padding-bottom: 60px; /* Offset for fixed footer */
+    height: calc(100vh - 120px);  /* Full height minus header and footer */
+    overflow-y: auto;  /* Make it scrollable if content exceeds viewport */
+}
+
+.form-label.required::after {
+    content: "* ";
+    color: #dc3545;           /* Bootstrap’s “danger” red */
+    margin-right: 0.25em;
+}
+
+/* Fixed Header Styling */
+header.fixed-top {
+    z-index: 1000;  /* Ensure the header stays on top */
+}
+
+/* Fixed Footer Styling */
+footer.fixed-bottom {
+    z-index: 1000;  /* Ensure the footer stays on top */
+}
+
+/* Button Styling */
+footer button {
+    width: 35%;
+}
+
+#loading-overlay {
+    position: absolute;      /* bound to #mobile-frame */
+    top: 0; left: 0;         /* cover its full area */
+    width: 100%; height: 100%;
+    background: rgba(255,255,255,0.7);
+    display: none;           /* hide by default */
+    z-index: 2000;           /* above frame content */
+    align-items: center;
+    justify-content: center;
+  }
+
+/* Apply watermark to the center of the mobile frame */
+#mobile-frame::after {
+    content: "";
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translate(-50%);
+    width: 90px; /* Adjust based on your logo size */
+    height: 90px; /* Adjust based on your logo size */
+    background-size: contain; /* Ensure the image scales properly */
+    background-repeat: no-repeat;
+    opacity: 0.2; /* Adjust opacity for translucency */
+    pointer-events: none; /* Prevent it from blocking interactions */
+}
+
+
+/* Make sure the page is responsive */
+@media (max-width: 576px) {
+    footer button {
+        width: 90%;  /* Make buttons larger on small screens */
+    }
+}
+
+
+.alert-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.alert-error {
+    background-color: #dc3545;
+    color: white;
+}
+
+.alert-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.alert-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+/* Reduce font size for DataTable header, footer, and controls */
+.dataTables_info,              /* Info text (e.g., "Showing 1 to 10 of 50 entries") */
+.dataTables_length,            /* Show X entries dropdown */
+.dataTables_filter,            /* Search box */
+.dataTables_paginate,          /* Pagination */
+.dataTables_filter input {     /* Search box input */
+    font-size: 0.75rem;          /* Adjust the font size */
+}
+
+/* STYLES FOR CAPTURE IMAGE TEMPLATE START */
+
+#camera-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 0 auto; /* Center the wrapper */
+}
+
+video, canvas {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-width: 400px;
+    min-height: 300px;           /* Fallback for old browsers (400px width * 3/4 = 300px height) */
+    border: 2px solid black;
+    border-radius: 10px;
+    object-fit: contain;  
+}
+
+/* Overlay Button (Start Camera) */
+#start-camera-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 5px 14px;
+    font-size: 12px;
+    opacity: 0.95;
+    z-index: 1000; /* Increased z-index to ensure the button is on top */
+    background-color: rgba(0, 123, 255, 0.9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#start-camera-btn:hover {
+    background-color: rgba(0, 123, 255, 1);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+@media (max-width: 576px) {
+    video, canvas {
+        width: 90%; /* Make video/canvas wider on small screens */
+    }
+    .video-wrapper {
+        width: 90%;
+    }
+}
+
+/* STYLES FOR CAPTURE IMAGE TEMPLATE END */
+
+

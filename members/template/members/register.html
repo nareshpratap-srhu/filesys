@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block extrahead %}
+{% endblock %}
+
+{% block content %}
+    <div class="container d-flex justify-content-center align-items-center h-100" style="max-height: 100%; overflow: hidden;">
+        <div class="card p-4 shadow-sm" style="width: 90%; max-width: 320px; max-height: 100%; overflow-y: auto;">
+
+            <h4 class="text-center mb-3">Register Here</h4>
+
+            <!-- Registration Form -->
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">Full Name:</label>
+                    {{ form.full_name }}
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    {{ form.email }}
+                </div>
+                <div class="mb-3">
+                    <label for="department" class="form-label required">Department:</label>
+                    {{ form.department }}
+                </div>
+                <!-- Department Other -->
+                <div class="mb-3" id="department-other-wrapper" style="display: none;">
+                    <label for="department_other" class="form-label">Specify Department</label>
+                    {{ form.department_other }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_ward" class="form-label">Ward(Optional) :</label>
+                    {{ form.ward }}
+                </div>
+                <!-- Ward Other -->
+                <div class="mb-3" id="ward-other-wrapper" style="display: none;">
+                    <label for="id_ward_other" class="form-label">Specify Ward</label>
+                    {{ form.ward_other }}
+                </div>
+                <div class="mb-3">
+                    <label for="designation" class="form-label required">Designation:</label>
+                    {{ form.designation }}
+                </div>
+
+                <!-- Designation Other -->
+                <div class="mb-3" id="designation-other-wrapper" style="display: none;">
+                    <label for="designation_other" class="form-label">Specify Designation</label>
+                    {{ form.designation_other }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone" class="form-label required">Contact:</label>
+                    {{ form.phone }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.password1.id_for_label }}" class="form-label required">Password:</label>
+                    <div class="input-group">
+                        {{ form.password1 }}
+                        <span class="input-group-text toggle-password" data-toggle="{{ form.password1.id_for_label }}">
+                            <i class="bi bi-eye-slash"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.password2.id_for_label }}" class="form-label required">Confirm Password:</label>
+                    <div class="input-group">
+                        {{ form.password2 }}
+                        <span class="input-group-text toggle-password" data-toggle="{{ form.password2.id_for_label }}">
+                            <i class="bi bi-eye-slash"></i>
+                        </span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Register</button>
+            </form>
+
+            <!-- Login Link -->
+            <p class="text-start mt-3"><br>
+                Already have an account? <br>
+                <a href="{% url 'members:login' %}">Login here</a>
+            </p>
+
+            <!-- Display Form Errors -->
+            {% if form.errors %}
+                <div class="alert alert-danger text-center p-2" style="font-size: 0.8rem;">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                            <span><strong>⚠️</strong> {{ error }}</span><br>
+                            {% endfor %}
+                        {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // --- Select2 Initialization ---
+  document.querySelectorAll('.select2').forEach(function(el) {
+    $(el).select2({
+      placeholder: "-- Select an Option --",
+      allowClear: true,
+      width: '100%',
+      minimumResultsForSearch: 0
+    });
+
+    const container = el.nextElementSibling;
+    container.setAttribute('tabindex', '0');
+    container.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(el).select2('open');
+      }
+    });
+
+    $(el).on('select2:open', function() {
+      setTimeout(function() {
+        const searchField = document.querySelector('.select2-search__field');
+        if (searchField) searchField.focus();
+      }, 0);
+    });
+  });
+
+  // --- Show/Hide “Other” Fields ---
+  function toggleOtherField(selectId, wrapperId) {
+    // use jQuery option:selected so it stays in sync with Select2
+    const selectedText = $(`#${selectId} option:selected`).text().toLowerCase();
+    const $wrapper = $(`#${wrapperId}`);
+    const $input = $wrapper.find('input');
+
+    if (selectedText === "other" || selectedText === "others") {
+      $wrapper.show();
+      $input.prop('required', true);
+    } else {
+      $wrapper.hide();
+      $input.val("");
+      $input.prop('required', false);
+    }
+  }
+
+  // Initial toggle on page load
+  toggleOtherField("id_department", "department-other-wrapper");
+  toggleOtherField("id_designation", "designation-other-wrapper");
+  toggleOtherField("id_ward", "ward-other-wrapper");
+
+  // Bind change events
+  $('#id_department').on('change', function () {
+    toggleOtherField("id_department", "department-other-wrapper");
+  });
+  $('#id_designation').on('change', function () {
+    toggleOtherField("id_designation", "designation-other-wrapper");
+  });
+  $('#id_ward').on('change', function () {
+    toggleOtherField("id_ward",       "ward-other-wrapper");
+  });
+
+  // --- Password toggle ---
+  document.querySelectorAll('.toggle-password').forEach(function(toggle) {
+    toggle.addEventListener('click', function() {
+      const input = document.getElementById(this.dataset.toggle);
+      const icon = this.querySelector('i');
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace('bi-eye-slash','bi-eye');
+      } else {
+        input.type = "password";
+        icon.classList.replace('bi-eye','bi-eye-slash');
+      }
+    });
+  });
+
+  // --- Loading Spinner ---
+  const overlay = document.getElementById('loading-overlay');
+  overlay.style.display = 'none';
+  const form = document.querySelector('form[method="POST"]');
+  form.addEventListener('submit', function() {
+    overlay.style.display = 'flex';
+  });
+
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      overlay.style.display = 'none';
+    }
+  });
+});
+</script>
+{% endblock %}
+
+
+
+
+
