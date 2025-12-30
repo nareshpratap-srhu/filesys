@@ -90,6 +90,10 @@
 {% endblock %}
 
 {% block extrascripts %}
+<script>
+  window.GOOGLE_MAPS_KEY = "{{ GOOGLE_MAPS_API_KEY }}";
+</script>
+
 <script src="{% static 'echs/js/capture_images.js' %}"></script>
 
 <!-- Include jQuery and Select2 JS -->
@@ -101,5 +105,6 @@
 <script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
 
 <script src="{% static 'echs/js/tag_check.js' %}"></script>
+
 
 {% endblock %}

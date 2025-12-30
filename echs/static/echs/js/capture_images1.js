@@ -22,12 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     //Spinner
     const spinnerIcon = document.getElementById('loading-overlay');
 
-    const GOOGLE_API_KEY = window.GOOGLE_MAPS_KEY || null;
-
-    if (!GOOGLE_API_KEY) {
-        console.warn("⚠️ Google Maps API key missing");
-    }
-
     // 📦 Variables
     let stream;
     let currentCameraIndex = 0;
@@ -200,29 +194,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 🗺️ Start background reverse-geocode
                     const lat = storedLatitude.toFixed(6);
                     const lng = storedLongitude.toFixed(6);
-                    const geocodeUrl =`https://maps.googleapis.com/maps/api/geocode/json` +
-                      `?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}`;
+                    const nominatimUrl =
+                    `https://nominatim.openstreetmap.org/reverse?` +
+                    `format=json&lat=${lat}&lon=${lng}` +
+                    `&addressdetails=0&namedetails=0&extratags=0&zoom=14`;
 
-                    console.log("⏳ Prefetching address from Google Maps...");
+                    console.log("⏳ Prefetching address from OSM...");
 
                     osmStartTime = performance.now(); // ✅ Proper timer stamp
-
-                    pendingAddressPromise = fetch(geocodeUrl)
+                    pendingAddressPromise = fetch(nominatimUrl)
                     .then(res => res.json())
                     .then(data => {
-                        if (data.status === "OK" && data.results.length > 0) {
-                            resolvedAddress = data.results[0].formatted_address;
-                            window.lastGeocodeResult = data.results[0];
-                        } else {
-                            resolvedAddress = "Address not available";
-                        }
-                        console.log("✅ Google address:", resolvedAddress);
+                        resolvedAddress = data.display_name || "Address not available";
+                        console.log(`✅ Prefetched address in ${(performance.now() - osmStartTime).toFixed(1)} ms:`, resolvedAddress);
                     })
                     .catch(err => {
-                        console.warn("❌ Google reverse geocode failed:", err);
+                        console.warn("❌ Failed to prefetch address:", err);
                         resolvedAddress = "Address unavailable";
                     });
-                       
+                    //background reverse code end
 
                     // 🔍 Inspect precise DNS/TCP/TLS timing for OSM (Dev only)
                     if (location.hostname === "127.0.0.1") {
@@ -529,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw video frame
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+        // Function to finalize UI & Blob after rendering
         const finalizeCapture = () => {
             video.style.display = "none";
             captureBtn.style.display = "none";
@@ -538,12 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
             retakeBtn.style.display = "block";
             uploadBtn.style.display = "block";
 
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-
+            stream.getTracks().forEach(track => track.stop());
             console.log("✅ Image captured.");
 
+            // 👉 Re-enable buttons for next actions
             retakeBtn.disabled = false;
             uploadBtn.disabled = false;
 
@@ -557,254 +546,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`📏 Image Size: ${storedImageSize} bytes`);
                 document.getElementById("image-size").textContent = `${(storedImageSize / 1024).toFixed(2)} KB`;
 
-                stopSpinner(); // ⏹️ Stop spinner
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const arr = new Uint8Array(reader.result).subarray(0, 4);
+                    let header = "";
+                    for (let i = 0; i < arr.length; i++) {
+                        header += arr[i].toString(16);
+                    }
+
+                    switch (header) {
+                        case "ffd8ffe0":
+                        case "ffd8ffe1":
+                        case "ffd8ffe2":
+                            console.log("✅ Verified: JPEG file format based on magic number.");
+                            break;
+                        case "89504e47":
+                            console.warn("⚠️ Warning: Image is still in PNG format (magic number matches PNG).");
+                            break;
+                        default:
+                            console.warn("❓ Unknown file format. Magic header:", header);
+                    }
+                };
+                reader.readAsArrayBuffer(blob);
+                stopSpinner(); // ⏹️ Stop spinner 
                 const totalCaptureTime = performance.now() - captureStartTime;
                 console.log(`🤳 Capture workflow completed in ${totalCaptureTime.toFixed(1)} ms`);
-            }, "image/jpeg", 1.0);
+            }, "image/jpeg", 1.0); // can use 0.8 for lower quality
         };
 
-        // Draw overlay and map
-        function drawOverlayAndFinalize(address) {
-            const boxWidth = canvas.width - 20;
+        // GPS Overall if available
+        if (storedLatitude && storedLongitude) {
+            const lat = storedLatitude.toFixed(6);
+            const lng = storedLongitude.toFixed(6);
+            const dateStr = new Date().toLocaleString();
+
+            const boxWidth = canvas.width - 20; // Full width minus 20px margins
             const padding = 10;
-            const initialBoxHeight = 140;
+            const mapSize = 90; // Mini-map square size
+            const initialBoxHeight = 120; // Adjust based on content
             const startX = 10;
             const startY = canvas.height - initialBoxHeight - 10;
-            const mapSize = 120;
 
-            // Semi-transparent box
-            context.fillStyle = "rgba(121, 119, 119, 0.05)";
+            // Draw overlay box
+            context.fillStyle = "rgba(0, 0, 0, 0.65)";
             context.fillRect(startX, startY, boxWidth, initialBoxHeight);
 
-            // Google Static Map
-            const mapImg = new Image();
-            mapImg.crossOrigin = "anonymous";
-            //mapImg.src = `https://maps.googleapis.com/maps/api/staticmap?center=${storedLatitude.toFixed(6)},${storedLongitude.toFixed(6)}&zoom=16&size=${mapSize}x${mapSize}&markers=color:red|${storedLatitude.toFixed(6)},${storedLongitude.toFixed(6)}&key=${GOOGLE_API_KEY}`;
-            mapImg.src = `https://maps.googleapis.com/maps/api/staticmap?center=${storedLatitude.toFixed(6)},${storedLongitude.toFixed(6)}&zoom=16&size=${mapSize}x${mapSize}&scale=2&maptype=satellite&markers=color:red|${storedLatitude.toFixed(6)},${storedLongitude.toFixed(6)}&key=${GOOGLE_API_KEY}`;
-            
-            // Timeout fallback (3 seconds)
-            const mapTimeout = setTimeout(() => {
-                console.warn("⚠️ Map loading timeout, finalizing capture anyway.");
-                drawText(context, address, startX, startY, boxWidth, padding, mapSize);
-                finalizeCapture();
-            }, 3000);
+            console.log("🛠️ Overlay box drawn at bottom of image.");
 
-            mapImg.onload = () => {
-                clearTimeout(mapTimeout);
-                context.drawImage(mapImg, startX + padding, startY + padding, mapSize, mapSize);
-                drawText(context, address, startX, startY, boxWidth, padding, mapSize);
+            // ✅ Smart handling of pre-fetched address
+            const drawAddressAndFinalize = (text) => {
+                drawText(context, text, startX, startY, boxWidth, padding, 0);
                 finalizeCapture();
             };
 
-            mapImg.onerror = () => {
-                clearTimeout(mapTimeout);
-                console.warn("❌ Google Static Map failed to load");
-                drawText(context, address, startX, startY, boxWidth, padding, mapSize);
-                finalizeCapture();
-            };
-        }
-
-        // Updated drawText to accept mapSize
-        function drawText(context, address, startX, startY, boxWidth, padding, mapSize) {
-            const bgX = startX + padding + mapSize +10;
-            const bgY = startY + padding;
-            const bgHeight = mapSize;
-            const bgwidhth=boxWidth-mapSize-(2*padding);
-
-            context.fillStyle = "rgba(82, 80, 80, 0.33)";
-            context.fillRect(bgX, bgY, bgwidhth, bgHeight);
-
-            const textStartX = bgX + padding;
-            let textY = bgY + padding+10;
-
-            // Split address into title and full address
-            function buildAddressFromComponents() {
-                    // Check if we have the geocode result stored
-                    if (!window.lastGeocodeResult || !window.lastGeocodeResult.address_components) {
-                        return { title: address, fullAddress: address };
-                    }
-                
-                    const components = window.lastGeocodeResult.address_components;
-
-                    // Extract different components
-                    let streetNumber = '';
-                    let route = '';
-                    let locality = '';
-                    let sublocality = '';
-                    let administrativeArea4 = '';
-                    let administrativeArea3 = '';
-                    let administrativeArea2 = '';
-                    let administrativeArea1 = '';
-                    let postalCode = '';
-                    let country = '';
-                    let plusCode = '';
-                
-                    components.forEach(component => {
-                        if (component.types.includes('street_number')) {
-                            streetNumber = component.long_name;
-                        } else if (component.types.includes('route')) {
-                            route = component.long_name;
-                        } else if (component.types.includes('locality')) {
-                            locality = component.long_name;
-                        } else if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
-                            sublocality = component.long_name;
-                        } else if (component.types.includes('administrative_area_level_4')) {
-                            administrativeArea4 = component.long_name;
-                        } else if (component.types.includes('administrative_area_level_3')) {
-                            administrativeArea3 = component.long_name;
-                        } else if (component.types.includes('administrative_area_level_2')) {
-                            administrativeArea2 = component.long_name;
-                        } else if (component.types.includes('administrative_area_level_1')) {
-                            administrativeArea1 = component.long_name;
-                        } else if (component.types.includes('postal_code')) {
-                            postalCode = component.long_name;
-                        } else if (component.types.includes('country')) {
-                            country = component.long_name;
-                        } else if (component.types.includes('plus_code')) {
-                            plusCode = component.long_name;
-                        }
-                    });
-                
-                    // Build the title (main address without postal code and plus code)
-                    let titleParts = [];
-
-
-                    // Add locality/sublocality
-                    if (administrativeArea4 ) {
-                        titleParts.push(administrativeArea4 );
-                    } else if (locality) {
-                        titleParts.push(locality);
-                    }
-
-                    if (administrativeArea1) {
-                        titleParts.push(administrativeArea1);
-                    } else if (administrativeArea3) {
-                        titleParts.push(administrativeArea3);
-                    }
-
-
-                    // Add administrative area level 3 if different from locality
-                    if (country) {
-                        titleParts.push(country);
-                    }
-
-                    // Join title parts
-                    const title = titleParts.length > 0 ? titleParts.join(', ') : 
-                                 (locality || administrativeArea3 || administrativeArea2 || 'Unknown Location');
-
-                    // Build full address (including postal code)
-                    let fullAddressParts = [];
-
-                    // Start with street address
-                    if (streetNumber && route) {
-                        fullAddressParts.push(`${streetNumber} ${route}`);
-                    } else if (route) {
-                        fullAddressParts.push(route);
-                    }
-
-                    // Add locality
-                    if (locality) {
-                        fullAddressParts.push(locality);
-                    }
-
-                    // Add administrative areas
-                    if (administrativeArea3 && administrativeArea3 !== locality) {
-                        fullAddressParts.push(administrativeArea3);
-                    }
-
-
-                    // Add state
-                    if (administrativeArea1) {
-                        fullAddressParts.push(administrativeArea1);
-                    }
-
-                    // Add postal code
-                    if (postalCode) {
-                        fullAddressParts.push(postalCode);
-                    }
-
-                    // Add country
-                    if (country) {
-                        fullAddressParts.push(country);
-                    }
-
-                    const fullAddress = fullAddressParts.join(', ');
-
-                    return { title, fullAddress };
+            if (resolvedAddress) {
+                // ✅ Address already available
+                console.log("📍 Using prefetched address:", resolvedAddress);
+                drawAddressAndFinalize(resolvedAddress);
+            } else if (pendingAddressPromise) {
+                // ⏳ Still waiting on prefetch — wait before finalizing
+                console.log("⏳ Waiting for OSM address before finalizing...");
+                pendingAddressPromise.then(() => {
+                    const finalAddress = resolvedAddress || "Address unavailable";
+                    console.log("📍 Address resolved after capture:", finalAddress);
+                    drawAddressAndFinalize(finalAddress);
+                });
+            } else {
+                // 🚫 Prefetch never happened (edge case)
+                console.warn("⚠️ No OSM request available. Drawing fallback.");
+                drawAddressAndFinalize("Address unavailable");
             }
 
-            const addressParts = buildAddressFromComponents();
-            
-
-
-            context.fillStyle = "white";
-            context.font = "bold 22px Roboto, Arial, sans-serif";
-            // const titel=buildTitel(resolvedAddress.address_components)
-            context.fillText(addressParts.title, textStartX, textY+5);
-
-            // Draw full address in second line
-            textY += 24; // Line height for the second line
-
-            context.font = "16px Roboto, Arial, sans-serif";
-            const maxTextWidth = bgwidhth - (2 * padding) - 10;
-
-            // Break full address into multiple lines if needed
-            let words = addressParts.fullAddress.split(' ');
-            let line = '';
-            let lineHeight = 18;
-
-            for (let i = 0; i < words.length; i++) {
-                let testLine = line + words[i] + ' ';
-                let metrics = context.measureText(testLine);
-                let testWidth = metrics.width;
-                if (testWidth > maxTextWidth && i > 0) {
-                    context.fillText(line, textStartX, textY);
-                    line = words[i] + ' ';
-                    textY += lineHeight;
-                } else {
-                    line = testLine;
-                }
-            }
-            context.fillText(line, textStartX, textY);
-            textY += lineHeight + 5;
-
-            context.font = "16px Roboto, Arial, sans-serif";
-            context.fillText(`Lat: ${storedLatitude},  Long: ${storedLongitude}`, textStartX, textY);
-            textY += lineHeight+5;
-            context.fillText(formatDateWithGMT(new Date()),textStartX,textY);
-        }
-        
-        // Decide whether to overlay map or finalize immediately
-        if (storedLatitude && storedLongitude) {
-            const address = resolvedAddress || "Address unavailable";
-            drawOverlayAndFinalize(address);
         } else {
             finalizeCapture();
         }
     });
-
-
-
-    function formatDateWithGMT(date) {
-        const pad = n => String(n).padStart(2, "0");
-
-        const day = pad(date.getDate());
-        const month = pad(date.getMonth() + 1);
-        const year = date.getFullYear();
-
-        let hours = date.getHours();
-        const minutes = pad(date.getMinutes());
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-
-        const offsetMinutes = -date.getTimezoneOffset();
-        const sign = offsetMinutes >= 0 ? "+" : "-";
-        const offsetHours = pad(Math.floor(Math.abs(offsetMinutes) / 60));
-        const offsetMins = pad(Math.abs(offsetMinutes) % 60);
-
-        return `${day}/${month}/${year} ${pad(hours)}:${minutes} ${ampm} GMT ${sign}${offsetHours}:${offsetMins}`;
-    }
-
 
 
     // 🔄 Retake
@@ -910,7 +726,46 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    // 📜 Helper function to draw text parts
+    function drawText(context, address, startX, startY, boxWidth, padding) {
+        const textStartX = startX + padding; // Text after map or placeholder
+        let textY = startY + padding + 20; // Align with top
     
+        context.fillStyle = "white";
+        context.font = "16px Arial";
+        context.fillText("📍 Location Tag", textStartX, textY);
+    
+        context.font = "12px Arial"; // Address font
+        const maxTextWidth = boxWidth - (2 * padding);
+        let words = address.split(' ');
+        let line = '';
+        let lineHeight = 14;
+        textY += lineHeight; // Start address after Location Tag
+    
+        for (let i = 0; i < words.length; i++) {
+            let testLine = line + words[i] + ' ';
+            let metrics = context.measureText(testLine);
+            let testWidth = metrics.width;
+            if (testWidth > maxTextWidth && i > 0) {
+                context.fillText(line, textStartX, textY);
+                line = words[i] + ' ';
+                textY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        context.fillText(line, textStartX, textY);
+    
+        textY += lineHeight + 5;
+    
+        context.font = "13px Arial";
+        context.fillText(`Lat: ${storedLatitude}`, textStartX, textY);
+        textY += lineHeight;
+        context.fillText(`Lng: ${storedLongitude}`, textStartX, textY);
+        textY += lineHeight;
+        context.fillText(`📅 ${new Date().toLocaleString()}`, textStartX, textY);
+    }
+
     morePhotosBtn.addEventListener("click", () => {
         const uhid = getUHIDFromURL();
         if (uhid) {

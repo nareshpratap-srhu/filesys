@@ -178,7 +178,7 @@ def echs_image_capture(request):
     uhid = request.GET.get('uhid')
 
     if not uhid:
-        return render(request, "echs/capture_images.html", {
+        return render(request, "echs/echs_capture_images.html", {
             "uhid": None,
             "patient_name": None,
         })
@@ -258,7 +258,7 @@ def echs_image_capture(request):
             return JsonResponse({"success": False, "error": "Something went wrong. Please try again."})
 
     return render(request, "echs/echs_capture_images.html", 
-    {"uhid": uhid, "custom_tags": custom_tags, "patient_name": patient_name})
+    {"uhid": uhid, "custom_tags": custom_tags, "patient_name": patient_name, "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API_KEY})
 
 MAX_FILE_SIZE = 45 * 1024 * 1024  # 45 MB limit
 
@@ -851,27 +851,27 @@ def delete_image(request, model, id):
     # --------------------------
     for pdf in linked_pdfs:
 
-        if pdf.file_path and os.path.exists(pdf.file_path.path):
+        # if pdf.file_path and os.path.exists(pdf.file_path.path):
 
-            old_pdf_path = pdf.file_path.path
+            # old_pdf_path = pdf.file_path.path
 
-            deleted_pdf_folder = os.path.join(
-                settings.MEDIA_ROOT,
-                f"UHID_{patient.uhid}",
-                f"UHID_{patient.uhid}_deleted_files"
-            )
+            # deleted_pdf_folder = os.path.join(
+            #     settings.MEDIA_ROOT,
+            #     f"UHID_{patient.uhid}",
+            #     f"UHID_{patient.uhid}_deleted_files"
+            # )
 
-            os.makedirs(deleted_pdf_folder, exist_ok=True)
+            # os.makedirs(deleted_pdf_folder, exist_ok=True)
 
-            new_pdf_path = os.path.join(
-                deleted_pdf_folder,
-                os.path.basename(old_pdf_path)
-            )
+            # new_pdf_path = os.path.join(
+            #     deleted_pdf_folder,
+            #     os.path.basename(old_pdf_path)
+            # )
 
-            shutil.move(old_pdf_path, new_pdf_path)
+            # shutil.move(old_pdf_path, new_pdf_path)
 
-            rel_path_pdf = os.path.relpath(new_pdf_path, settings.MEDIA_ROOT)
-            pdf.file_path.name = rel_path_pdf.replace("\\", "/")
+            # rel_path_pdf = os.path.relpath(new_pdf_path, settings.MEDIA_ROOT)
+            # pdf.file_path.name = rel_path_pdf.replace("\\", "/")
 
         pdf.is_deleted = True
         pdf.deleted_on = timezone.now()
@@ -881,27 +881,27 @@ def delete_image(request, model, id):
     # --------------------------
     # Move Image physical file
     # --------------------------
-    if image.image_path and os.path.exists(image.image_path.path):
+    # if image.image_path and os.path.exists(image.image_path.path):
 
-        old_path = image.image_path.path
+        # old_path = image.image_path.path
 
-        deleted_image_folder = os.path.join(
-            settings.MEDIA_ROOT,
-            f"UHID_{patient.uhid}",
-            f"UHID_{patient.uhid}_deleted_files"
-        )
+        # deleted_image_folder = os.path.join(
+        #     settings.MEDIA_ROOT,
+        #     f"UHID_{patient.uhid}",
+        #     f"UHID_{patient.uhid}_deleted_files"
+        # )
 
-        os.makedirs(deleted_image_folder, exist_ok=True)
+        # os.makedirs(deleted_image_folder, exist_ok=True)
 
-        new_path = os.path.join(
-            deleted_image_folder,
-            os.path.basename(old_path)
-        )
+        # new_path = os.path.join(
+        #     deleted_image_folder,
+        #     os.path.basename(old_path)
+        # )
 
-        shutil.move(old_path, new_path)
+        # shutil.move(old_path, new_path)
 
-        relative_path = os.path.relpath(new_path, settings.MEDIA_ROOT)
-        image.image_path.name = relative_path.replace("\\", "/")
+        # relative_path = os.path.relpath(new_path, settings.MEDIA_ROOT)
+        # image.image_path.name = relative_path.replace("\\", "/")
 
     # --------------------------
     # Soft delete Image instance
@@ -998,30 +998,30 @@ def delete_uploaded_pdf(request, id):
     # -----------------------------
     # FILE MOVE LOGIC
     # -----------------------------
-    if file.file_path and os.path.exists(file.file_path.path):
-        old_path = file.file_path.path
+    # if file.file_path and os.path.exists(file.file_path.path):
+    #     old_path = file.file_path.path
 
-        # New deleted folder
-        deleted_folder = os.path.join(
-            settings.MEDIA_ROOT,
-            f"UHID_{file.patient.uhid}",
-            f"UHID_{file.patient.uhid}_deleted_files"
-        )
+    #     # New deleted folder
+    #     deleted_folder = os.path.join(
+    #         settings.MEDIA_ROOT,
+    #         f"UHID_{file.patient.uhid}",
+    #         f"UHID_{file.patient.uhid}_deleted_files"
+    #     )
 
-        os.makedirs(deleted_folder, exist_ok=True)
+    #     os.makedirs(deleted_folder, exist_ok=True)
 
-        new_path = os.path.join(
-            deleted_folder,
-            os.path.basename(old_path)
-        )
+    #     new_path = os.path.join(
+    #         deleted_folder,
+    #         os.path.basename(old_path)
+    #     )
 
-        shutil.move(old_path, new_path)
+    #     shutil.move(old_path, new_path)
 
-        # Convert OS path → relative path → URL format
-        relative_path = os.path.relpath(new_path, settings.MEDIA_ROOT)
-        relative_path = relative_path.replace("\\", "/")   # <<< FIX HERE
+    #     # Convert OS path → relative path → URL format
+    #     relative_path = os.path.relpath(new_path, settings.MEDIA_ROOT)
+    #     relative_path = relative_path.replace("\\", "/")   # <<< FIX HERE
 
-        file.file_path.name = relative_path
+    #     file.file_path.name = relative_path
 
 
 
@@ -1225,7 +1225,7 @@ def restore_item(request, file_id, source):
     obj.deleted_on = None
     obj.save()
 
-    restore_physical_file(obj)
+    # restore_physical_file(obj)
 
     tag_obj = getattr(obj, "custom_tag", None)
 
@@ -1239,7 +1239,7 @@ def restore_item(request, file_id, source):
         ).first()
 
         if other:
-            restore_physical_file(other)
+            # restore_physical_file(other)
 
             other.is_deleted = False
             other.deleted_on = None
