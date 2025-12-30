@@ -159,7 +159,7 @@ LOGIN_REDIRECT_URL = 'capture:uhid_capture_camera'
 # Redirect users to login page after logout
 LOGOUT_REDIRECT_URL = 'members:login'
 
-GOOGLE_MAPS_API_KEY = "AIzaSyBhLuJBUoX3Ki6c8vYFlfMHfCPHlyUtwoE"
+GOOGLE_MAPS_API_KEY = "your api key"
 
 # Media Storage
 MEDIA_URL = '/media/'
